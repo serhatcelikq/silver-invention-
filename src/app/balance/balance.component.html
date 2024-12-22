@@ -1,0 +1,38 @@
+<div class="balance-container">
+    <div class="balance-card">
+        <h2>Para İşlemleri</h2>
+        
+        <div class="current-balance">
+            <h3>Mevcut Bakiyeniz</h3>
+            <p class="amount">{{currentBalance}} ₺</p>
+        </div>
+
+        <div class="deposit-section">
+            <h3>Bakiye Yükle</h3>
+            <p class="info">Ne kadar yüklemek istersiniz?</p>
+            
+            <div class="input-group">
+                <input 
+                    type="number" 
+                    [(ngModel)]="depositAmount" 
+                    placeholder="Miktar giriniz"
+                    min="0"
+                    max="5000"
+                >
+                <span class="currency">₺</span>
+            </div>
+
+            <p class="max-info">Maximum yükleme tutarı: 5000 ₺</p>
+
+            <button class="deposit-btn" (click)="deposit()">Yükle</button>
+
+            <p class="error-message" *ngIf="errorMessage">{{errorMessage}}</p>
+        </div>
+
+        <!-- Başarı Mesajı -->
+        <div class="success-message" *ngIf="showSuccess">
+            <i class="fas fa-check-circle"></i>
+            <p>Para yükleme işlemi başarıyla gerçekleşmiştir!</p>
+        </div>
+    </div>
+</div> 

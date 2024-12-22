@@ -1,0 +1,84 @@
+<div class="users-container">
+  <div class="users-header">
+    <h2>Kullanıcı Yönetimi</h2>
+    <p>Sistemde kayıtlı kullanıcıları yönetin</p>
+  </div>
+
+  <div class="users-grid">
+    <div *ngFor="let user of users" class="user-card">
+      <div class="user-avatar">
+        <i class="fas fa-user"></i>
+      </div>
+      <div class="user-info">
+        <h3>{{ user.name }}</h3>
+        <p class="user-email">{{ user.email }}</p>
+        <span
+          class="user-role"
+          [ngClass]="{ 'admin-role': user.role === 'admin' }"
+        >
+          {{ user.role === "admin" ? "Admin" : "Kullanıcı" }}
+        </span>
+      </div>
+      <div class="user-actions">
+        <button class="edit-btn" (click)="editUser(user)">
+          <i class="fas fa-edit"></i>
+          Düzenle
+        </button>
+        <button
+          class="delete-btn"
+          (click)="deleteUser(user)"
+          [disabled]="user.role === 'admin'"
+        >
+          <i class="fas fa-trash"></i>
+          Sil
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kullanıcı bulunamadığında -->
+  <div *ngIf="users.length === 0" class="no-users">
+    <i class="fas fa-users-slash"></i>
+    <p>Henüz kayıtlı kullanıcı bulunmamaktadır.</p>
+  </div>
+</div>
+
+<!-- Düzenleme Modal -->
+<div class="modal" *ngIf="selectedUser" (click)="closeModal($event)">
+  <div class="modal-content">
+    <h3>Kullanıcı Düzenle</h3>
+    <form (ngSubmit)="updateUser()">
+      <div class="form-group">
+        <label>Ad Soyad:</label>
+        <input
+          type="text"
+          [(ngModel)]="selectedUser.name"
+          name="name"
+          required
+        />
+      </div>
+      <div class="form-group">
+        <label>Email:</label>
+        <input
+          type="email"
+          [(ngModel)]="selectedUser.email"
+          name="email"
+          required
+        />
+      </div>
+      <div class="form-group">
+        <label>Rol:</label>
+        <select [(ngModel)]="selectedUser.role" name="role">
+          <option value="user">Kullanıcı</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="cancel-btn" (click)="closeModal($event)">
+          İptal
+        </button>
+        <button type="submit" class="save-btn">Kaydet</button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,101 @@
+<div class="auth-container">
+  <div class="auth-form">
+    <h2>Giriş Yap</h2>
+
+    <!-- Normal Giriş Formu -->
+    <div *ngIf="!showForgotPassword">
+      <div class="form-group">
+        <input
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          placeholder="E-posta adresiniz"
+          required
+          class="form-control"
+        />
+      </div>
+
+      <div class="form-group">
+        <input
+          type="password"
+          [(ngModel)]="password"
+          name="password"
+          placeholder="Şifreniz"
+          required
+          class="form-control"
+        />
+      </div>
+
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+
+      <button type="submit" (click)="onSubmit()" class="auth-btn">
+        Giriş Yap
+      </button>
+
+      <div class="auth-links">
+        <a (click)="toggleForgotPassword()" class="forgot-password-link">
+          Şifremi Unuttum
+        </a>
+        <a routerLink="/register" class="register-link">
+          Hesabınız yok mu? Kaydolun.
+        </a>
+      </div>
+    </div>
+
+    <!-- Şifre Sıfırlama Formu -->
+    <div *ngIf="showForgotPassword" class="forgot-password-form">
+      <div class="form-group">
+        <input
+          type="text"
+          [(ngModel)]="resetUsername"
+          name="resetUsername"
+          placeholder="Kullanıcı adınız"
+          required
+          class="form-control"
+        />
+      </div>
+
+      <div class="form-group">
+        <input
+          type="email"
+          [(ngModel)]="resetEmail"
+          name="resetEmail"
+          placeholder="E-posta adresiniz"
+          required
+          class="form-control"
+        />
+      </div>
+
+      <div *ngIf="!showNewPasswordInput">
+        <button (click)="searchUser()" class="auth-btn">Ara</button>
+      </div>
+
+      <div *ngIf="showNewPasswordInput" class="form-group">
+        <input
+          type="password"
+          [(ngModel)]="newPassword"
+          name="newPassword"
+          placeholder="Yeni şifreniz"
+          required
+          class="form-control"
+        />
+        <button (click)="resetPassword()" class="auth-btn">
+          Şifreyi Güncelle
+        </button>
+      </div>
+
+      <button (click)="toggleForgotPassword()" class="back-btn">
+        Giriş Sayfasına Dön
+      </button>
+
+      <div
+        *ngIf="resetMessage"
+        [class]="resetSuccess ? 'success-message' : 'error-message'"
+      >
+        {{ resetMessage }}
+      </div>
+    </div>
+  </div>
+</div>

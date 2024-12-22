@@ -1,0 +1,572 @@
+/* Genel Ayarlar */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Arial", sans-serif;
+  background-color: #000000;
+  color: #333;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Header */
+.header {
+  background-color: #ffffff;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+}
+
+.logo img {
+  height: 40px;
+  width: auto;
+}
+
+.navbar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem 2rem;
+  background: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.navbar a {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: #4b5563;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.navbar a i {
+  font-size: 1.2rem;
+}
+
+.navbar a:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+  transform: translateY(-2px);
+}
+
+.navbar a.active {
+  background: #667eea;
+  color: white;
+}
+
+.navbar a.active i {
+  color: white;
+}
+
+/* İkon renkleri */
+.navbar a i.fa-utensils {
+  color: #10b981;
+}
+
+.navbar a i.fa-heart {
+  color: #ef4444;
+}
+
+.navbar a i.fa-users {
+  color: #3b82f6;
+}
+
+.user-menu {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.profile-link {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea !important;
+}
+
+.logout-link {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444 !important;
+}
+
+.logout-link:hover {
+  background: rgba(239, 68, 68, 0.2) !important;
+  color: #dc2626 !important;
+}
+
+/* Responsive tasarım */
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    padding: 1rem;
+  }
+
+  .navbar a {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .user-menu {
+    width: 100%;
+    flex-direction: column;
+    margin-top: 1rem;
+  }
+
+  .user-menu a {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Animasyonlar */
+@keyframes slideIn {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.navbar a {
+  animation: slideIn 0.3s ease;
+}
+
+/* Giriş/Kayıt butonları için özel stiller */
+.auth-btn {
+  padding: 0.5rem 1.5rem !important;
+  border-radius: 25px !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+}
+
+.login-btn {
+  background-color: transparent !important;
+  border: 2px solid #667eea !important;
+  color: #667eea !important;
+}
+
+.login-btn:hover {
+  background-color: #667eea !important;
+  color: white !important;
+}
+
+.register-btn {
+  background-color: #667eea !important;
+  color: white !important;
+  border: 2px solid #667eea !important;
+}
+
+.register-btn:hover {
+  background-color: #5a6fd1 !important;
+  border-color: #5a6fd1 !important;
+}
+
+/* Bakiye ve çıkış butonları için stiller */
+.balance-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #4caf50;
+  color: white !important;
+}
+
+.balance-link:hover {
+  background-color: #45a049 !important;
+  color: white !important;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #dc3545 !important;
+}
+
+.logout-btn:hover {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+/* Responsive tasarım */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .navbar {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.8rem;
+  }
+
+  .auth-btn {
+    padding: 0.4rem 1rem !important;
+  }
+
+  .navbar a {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Anasayfa */
+.anasayfa {
+  /* background: url('assets/images/background.jpg') no-repeat center center/cover; */
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start; /* Sola yasla */
+  color: white;
+  padding: 20px 40px; /* Sola doğru biraz boşluk bırak */
+  text-align: left;
+}
+
+.anasayfa h3 {
+  font-size: 3rem;
+  margin-bottom: 20px;
+}
+
+.anasayfa p {
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+  max-width: 600px;
+}
+
+.anasayfa a {
+  background-color: #ffc107;
+  color: #333;
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-decoration: none;
+  font-size: 1.2rem;
+  transition: background 0.3s ease;
+}
+
+.anasayfa a:hover {
+  background-color: #ffcd39;
+}
+
+/* Restaurantlar */
+.restaurantlar {
+  padding: 50px 20px;
+  background: #fff;
+  text-align: left; /* İçeriği sola yasla */
+}
+
+.restaurantlar .heading {
+  font-size: 2.5rem;
+  margin-bottom: 30px;
+  color: #007bff;
+  text-align: left; /* Başlık sola yasla */
+}
+
+.box-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: flex-start; /* Kartları sola yasla */
+}
+
+.box {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  overflow: hidden;
+  text-align: center;
+  width: 300px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.box:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.box img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.box h3 {
+  font-size: 1.5rem;
+  color: #333;
+  margin: 15px 0;
+}
+
+.box .ücret {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.box .btn {
+  display: inline-block;
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-decoration: none;
+  transition: background 0.3s ease;
+  margin-bottom: 15px;
+}
+
+.box .btn:hover {
+  background-color: #0056b3;
+}
+
+/* Kullanıcı menüsü */
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.5rem;
+  border-radius: 12px;
+}
+
+.profile-link {
+  color: #333;
+}
+
+.profile-link:hover,
+.profile-link.active {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  color: white !important;
+}
+
+.logout-link {
+  color: #333;
+}
+
+.logout-link:hover {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+  color: white !important;
+}
+
+/* Responsive tasarım güncellemeleri */
+@media (max-width: 768px) {
+  .user-menu {
+    margin-left: 0.5rem;
+    padding-left: 0.5rem;
+  }
+
+  .navbar a {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+  }
+}
+
+.navbar-link {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-size: 1rem;
+}
+
+/* Çıkış butonunun hover efekti */
+.navbar-link:hover {
+  background-color: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+}
+
+/* Bakiye gösterimi */
+a[routerLink="/balance"] {
+  color: #333;
+}
+
+a[routerLink="/balance"]:hover,
+a[routerLink="/balance"].active {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: white !important;
+}
+
+/* Çıkış butonu */
+.navbar-link {
+  background: rgba(220, 53, 69, 0.1);
+}
+
+.navbar-link:hover {
+  background: rgba(220, 53, 69, 0.2);
+}
+
+/* Responsive tasarım */
+@media (max-width: 768px) {
+  .header {
+    padding: 1rem;
+  }
+
+  .navbar {
+    flex-wrap: wrap;
+    gap: 0.8rem;
+  }
+
+  .navbar a,
+  .navbar-link {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .user-menu {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Admin Dropdown Menü */
+.admin-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.admin-menu-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.8rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.admin-menu-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.admin-dropdown-content {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  min-width: 250px;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  padding: 0.8rem;
+  z-index: 1000;
+  margin-top: 0.5rem;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+}
+
+.admin-dropdown-content.show {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.admin-dropdown-content a {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  color: #333;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  margin-bottom: 0.3rem;
+}
+
+.admin-dropdown-content a i {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+/* Her menü öğesi için özel renkler */
+.admin-dropdown-content a:nth-child(1) i {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.admin-dropdown-content a:nth-child(2) i {
+  background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+  color: white;
+}
+
+.admin-dropdown-content a:nth-child(3) i {
+  background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%);
+  color: white;
+}
+
+.admin-dropdown-content a:nth-child(4) i {
+  background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+  color: white;
+}
+
+.admin-dropdown-content a:nth-child(5) i {
+  background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+  color: white;
+}
+
+.admin-dropdown-content a:hover {
+  background: rgba(102, 126, 234, 0.1);
+  transform: translateX(5px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive tasarım için */
+@media (max-width: 768px) {
+  .admin-dropdown {
+    position: static;
+  }
+
+  .admin-dropdown-content {
+    position: fixed;
+    top: auto;
+    left: 0;
+    right: 0;
+    width: 100%;
+    margin-top: 0;
+    border-radius: 0;
+  }
+}

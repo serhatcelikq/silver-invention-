@@ -1,0 +1,40 @@
+<div class="admin-profile-container">
+  <div class="profile-card">
+    <div class="profile-header">
+      <i class="fas fa-user-shield"></i>
+      <h2>Admin Profili</h2>
+    </div>
+
+    <div class="profile-info">
+      <div class="info-item">
+        <label>Ad Soyad:</label>
+        <span>{{ admin?.name }}</span>
+      </div>
+
+      <div class="info-item">
+        <label>Email:</label>
+        <span>{{ admin?.email }}</span>
+      </div>
+
+      <div class="info-item">
+        <label>Rol:</label>
+        <span class="admin-badge">Admin</span>
+      </div>
+
+      <div class="info-item">
+        <label>Yetki Seviyesi:</label>
+        <span class="permission-badge">Tam Yetki</span>
+      </div>
+
+      <div class="info-item">
+        <label>Son Giriş:</label>
+        <span>{{ admin?.lastLogin | date : "dd/MM/yyyy HH:mm" }}</span>
+      </div>
+
+      <div class="info-item">
+        <label>Hesap Durumu:</label>
+        <span class="status-badge">Aktif</span>
+      </div>
+    </div>
+  </div>
+</div>

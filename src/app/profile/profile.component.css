@@ -1,0 +1,194 @@
+.profile-container {
+  max-width: 800px;
+  margin: 80px auto 0;
+  padding: 2rem;
+}
+
+.profile-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
+  border-radius: 15px;
+  color: white;
+  margin-bottom: 2rem;
+}
+
+.user-info {
+  text-align: center;
+}
+
+.user-info i {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.user-info h2 {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.user-info p {
+  opacity: 0.9;
+}
+
+.order-history {
+  background: white;
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.order-history h3 {
+  color: #1a237e;
+  margin-bottom: 1.5rem;
+}
+
+.no-orders {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+}
+
+.no-orders i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: #ccc;
+}
+
+.order-card {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.order-header h4 {
+  color: #1a237e;
+  margin: 0;
+}
+
+.order-date {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.order-items {
+  margin-bottom: 1rem;
+}
+
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.order-total {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 1rem;
+  border-top: 2px solid #eee;
+  color: #1a237e;
+}
+
+.order-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.order-total {
+  font-weight: bold;
+  color: #1a237e;
+}
+
+.order-number {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.order-number span:first-child {
+  margin-right: 0.5rem;
+}
+
+.order-number span:last-child {
+  font-family: monospace;
+  color: #1a237e;
+  font-weight: 500;
+}
+
+/* Bakiye Bölümü Stilleri */
+.balance-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+}
+
+.balance-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.balance-info i {
+  font-size: 2rem;
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+  padding: 1rem;
+  border-radius: 12px;
+}
+
+.balance-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.balance-label {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.balance-amount {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: white;
+}
+
+.add-balance-btn {
+  width: 100%;
+  padding: 1rem;
+  background: #22c55e;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.add-balance-btn:hover {
+  background: #16a34a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+}
+
+.add-balance-btn i {
+  font-size: 1.2rem;
+}

@@ -1,0 +1,62 @@
+<div class="profile-container">
+  <div class="profile-header">
+    <div class="user-info">
+      <i class="fas fa-user-circle"></i>
+      <h2>{{ user?.name }}</h2>
+      <p>{{ user?.email }}</p>
+
+      <!-- Bakiye Bölümü -->
+      <div class="balance-section">
+        <div class="balance-info">
+          <i class="fas fa-wallet"></i>
+          <div class="balance-details">
+            <span class="balance-label">Mevcut Bakiye</span>
+            <span class="balance-amount">{{ currentBalance }} ₺</span>
+          </div>
+        </div>
+        <button class="add-balance-btn" (click)="navigateToBalance()">
+          <i class="fas fa-plus"></i>
+          Bakiye Yükle
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="order-history">
+    <h3>Sipariş Geçmişi</h3>
+
+    <div *ngIf="orders.length === 0" class="no-orders">
+      <i class="fas fa-shopping-bag"></i>
+      <p>Henüz hiç siparişiniz bulunmamaktadır.</p>
+    </div>
+
+    <div *ngIf="orders.length > 0" class="orders-list">
+      <div *ngFor="let order of orders" class="order-card">
+        <div class="order-header">
+          <h4>{{ order.restaurantName }}</h4>
+          <span class="order-date">{{
+            order.orderDate | date : "dd/MM/yyyy HH:mm"
+          }}</span>
+        </div>
+
+        <div class="order-items">
+          <div *ngFor="let item of order.items" class="order-item">
+            <span>{{ item.name }} x {{ item.quantity }}</span>
+            <span>{{ item.price * item.quantity }} ₺</span>
+          </div>
+        </div>
+
+        <div class="order-footer">
+          <div class="order-total">
+            <span>Toplam:</span>
+            <span>{{ order.totalAmount }} ₺</span>
+          </div>
+          <div class="order-number">
+            <span>Sipariş No:</span>
+            <span>{{ order.id }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

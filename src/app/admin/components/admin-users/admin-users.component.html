@@ -1,0 +1,44 @@
+<div class="admin-section">
+  <div class="users-section">
+    <h3>Kullanıcılar</h3>
+    <div class="search-box">
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        placeholder="Kullanıcı adı veya email ile ara..."
+      />
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Ad</th>
+          <th>Email</th>
+          <th>Rol</th>
+          <th>İşlemler</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of filteredUsers">
+          <td>{{ user.id }}</td>
+          <td>{{ user.name }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.role }}</td>
+          <td>
+            <button class="view-orders-btn" (click)="viewUserOrders(user)">
+              <i class="fas fa-shopping-bag"></i>
+              Siparişleri Gör
+            </button>
+            <button
+              class="delete-btn"
+              (click)="deleteUser(user.id)"
+              [disabled]="user.role === 'admin'"
+            >
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

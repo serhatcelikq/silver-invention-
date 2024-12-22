@@ -1,0 +1,9 @@
+/* Eğer böyle bir animasyon tanımı varsa silin: */
+@keyframes blink {
+    /* ... */
+}
+
+/* Ve h2 veya h3 etiketlerinde tanımlı animasyonu kaldırın: */
+h2, h3 {
+    animation: none;
+} 

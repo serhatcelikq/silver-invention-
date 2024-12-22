@@ -1,0 +1,39 @@
+.feature-card {
+  @apply bg-white rounded-xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl;
+  
+  .card-title {
+    @apply text-xl font-bold text-gray-800 mb-4;
+  }
+  
+  .card-content {
+    @apply text-gray-600;
+  }
+  
+  .card-footer {
+    @apply mt-4 flex justify-between items-center;
+  }
+}
+
+.nav-menu {
+  @apply flex gap-4 items-center;
+  
+  .nav-item {
+    @apply px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors duration-200;
+    
+    &.active {
+      @apply bg-primary-500 text-white hover:bg-primary-600;
+    }
+  }
+}
+
+.form-group {
+  @apply mb-4;
+  
+  label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+  }
+  
+  input {
+    @apply input;
+  }
+} 

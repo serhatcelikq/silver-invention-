@@ -1,0 +1,62 @@
+<header class="header">
+  <nav class="navbar">
+    <ng-container *ngIf="!isLoggedIn">
+      <a
+        routerLink="/"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        >Ana Sayfa</a
+      >
+    </ng-container>
+
+    <ng-container *ngIf="isLoggedIn">
+      <ng-container *ngIf="isAdmin">
+        <a routerLink="/admin/dashboard" routerLinkActive="active">
+          <i class="fas fa-chart-line"></i>
+          Admin Paneli
+        </a>
+        <a routerLink="/admin/restaurants" routerLinkActive="active">
+          <i class="fas fa-utensils"></i>
+          Restoranlar
+        </a>
+        <a routerLink="/users" routerLinkActive="active">
+          <i class="fas fa-users"></i>
+          Kullanıcılar
+        </a>
+        <a routerLink="/admin/orders" routerLinkActive="active">
+          <i class="fas fa-clipboard-list"></i>
+          Siparişler
+        </a>
+      </ng-container>
+
+      <ng-container *ngIf="!isAdmin">
+        <a routerLink="/restaurant" routerLinkActive="active">
+          <i class="fas fa-utensils"></i>
+          Restoranlar
+        </a>
+        <a routerLink="/favorite" routerLinkActive="active">
+          <i class="fas fa-heart"></i>
+          Favorilerim
+        </a>
+      </ng-container>
+
+      <div class="user-menu">
+        <a routerLink="/profile" routerLinkActive="active" class="profile-link">
+          <i class="fas fa-user"></i>
+          {{ userName }}
+        </a>
+        <a href="javascript:void(0)" (click)="onLogout()" class="logout-link">
+          <i class="fas fa-sign-out-alt"></i>
+          Çıkış
+        </a>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="!isLoggedIn">
+      <a routerLink="/signin" routerLinkActive="active">Giriş</a>
+      <a routerLink="/register" routerLinkActive="active">Üye Ol</a>
+    </ng-container>
+  </nav>
+</header>
+
+<router-outlet></router-outlet>
