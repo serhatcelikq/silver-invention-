@@ -1,0 +1,47 @@
+<div class="admin-section">
+  <div class="admin-header">
+    <a
+      (click)="showSection('dashboard')"
+      [class.active]="activeSection === 'dashboard'"
+    >
+      <i class="fas fa-chart-line"></i>
+      Admin Paneli
+    </a>
+    <a
+      (click)="showSection('restaurants')"
+      [class.active]="activeSection === 'restaurants'"
+    >
+      <i class="fas fa-store"></i>
+      Restoranlar
+    </a>
+    <a
+      (click)="showSection('orders')"
+      [class.active]="activeSection === 'orders'"
+    >
+      <i class="fas fa-shopping-bag"></i>
+      Siparişler
+    </a>
+    <a
+      (click)="showSection('users')"
+      [class.active]="activeSection === 'users'"
+    >
+      <i class="fas fa-users"></i>
+      Kullanıcılar
+    </a>
+    <a (click)="logout()" class="logout-btn">
+      <i class="fas fa-sign-out-alt"></i>
+      Çıkış
+    </a>
+  </div>
+
+  <div class="users-header" *ngIf="activeSection === 'users'">
+    <div class="users-header-content">
+      <h2><i class="fas fa-users"></i> Kullanıcı Yönetimi</h2>
+      <p>Sistemde kayıtlı tüm kullanıcıları görüntüleyin ve yönetin</p>
+    </div>
+  </div>
+
+  <div class="admin-content">
+    <router-outlet></router-outlet>
+  </div>
+</div>

@@ -1,194 +1,261 @@
 .profile-container {
-  max-width: 800px;
+  max-width: 1000px;
   margin: 80px auto 0;
   padding: 2rem;
 }
 
+/* Header Bölümü */
 .profile-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 2rem;
-  border-radius: 15px;
-  color: white;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  border-radius: 24px;
+  padding: 2.5rem;
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.1);
   margin-bottom: 2rem;
 }
 
 .user-info {
   text-align: center;
+  color: white;
 }
 
 .user-info i {
   font-size: 4rem;
   margin-bottom: 1rem;
+  opacity: 0.9;
 }
 
 .user-info h2 {
-  font-size: 1.8rem;
+  font-size: 2rem;
+  font-weight: 600;
   margin-bottom: 0.5rem;
 }
 
 .user-info p {
   opacity: 0.9;
+  font-size: 1.1rem;
 }
 
-.order-history {
-  background: white;
-  border-radius: 15px;
+/* Bakiye Bölümü */
+.balance-section {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
   padding: 2rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin-top: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.order-history h3 {
-  color: #1a237e;
-  margin-bottom: 1.5rem;
+.balance-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3rem;
 }
 
-.no-orders {
+.current-balance {
+  flex: 1;
+}
+
+.current-balance h4 {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin-bottom: 0.5rem;
+}
+
+.balance-amount {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.balance-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 250px;
+}
+
+.balance-input {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 1rem;
+  color: white;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+}
+
+.balance-input:focus {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  outline: none;
+}
+
+.balance-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.add-balance-btn {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 1rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.add-balance-btn:hover:not(:disabled) {
+  background: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.add-balance-btn:disabled {
+  background: rgba(255, 255, 255, 0.2);
+  cursor: not-allowed;
+}
+
+.max-amount-info {
   text-align: center;
-  padding: 3rem;
-  color: #666;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
 }
 
-.no-orders i {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  color: #ccc;
+/* Sipariş Geçmişi */
+.orders-section {
+  background: white;
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.orders-section h3 {
+  font-size: 1.5rem;
+  color: #1f2937;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.orders-list {
+  display: grid;
+  gap: 1.5rem;
 }
 
 .order-card {
-  background: #f8f9fa;
-  border-radius: 8px;
+  background: #f8fafc;
+  border-radius: 16px;
   padding: 1.5rem;
-  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+  border: 1px solid #e2e8f0;
+}
+
+.order-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
 }
 
 .order-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .order-header h4 {
-  color: #1a237e;
-  margin: 0;
+  font-size: 1.2rem;
+  color: #1f2937;
+  font-weight: 600;
 }
 
 .order-date {
-  color: #666;
+  color: #6b7280;
   font-size: 0.9rem;
 }
 
 .order-items {
-  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
 }
 
 .order-item {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: 0.5rem 0;
-  border-bottom: 1px solid #eee;
-}
-
-.order-total {
-  display: flex;
-  justify-content: space-between;
-  padding-top: 1rem;
-  border-top: 2px solid #eee;
-  color: #1a237e;
+  color: #4b5563;
 }
 
 .order-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 1rem;
+  margin-top: 1.5rem;
   padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #e2e8f0;
 }
 
 .order-total {
-  font-weight: bold;
-  color: #1a237e;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #4f46e5;
 }
 
 .order-number {
+  color: #6b7280;
   font-size: 0.9rem;
+}
+
+.no-orders {
+  text-align: center;
+  padding: 4rem 2rem;
   color: #6b7280;
 }
 
-.order-number span:first-child {
-  margin-right: 0.5rem;
-}
-
-.order-number span:last-child {
-  font-family: monospace;
-  color: #1a237e;
-  font-weight: 500;
-}
-
-/* Bakiye Bölümü Stilleri */
-.balance-section {
-  margin-top: 2rem;
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 15px;
-  backdrop-filter: blur(10px);
-}
-
-.balance-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+.no-orders i {
+  font-size: 4rem;
+  color: #e2e8f0;
   margin-bottom: 1rem;
 }
 
-.balance-info i {
-  font-size: 2rem;
-  color: #22c55e;
-  background: rgba(34, 197, 94, 0.1);
-  padding: 1rem;
-  border-radius: 12px;
-}
+/* Responsive Tasarım */
+@media (max-width: 768px) {
+  .profile-container {
+    padding: 1rem;
+  }
 
-.balance-details {
-  display: flex;
-  flex-direction: column;
-}
+  .profile-header {
+    padding: 1.5rem;
+  }
 
-.balance-label {
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.8);
-}
+  .balance-info {
+    flex-direction: column;
+    gap: 2rem;
+  }
 
-.balance-amount {
-  font-size: 1.8rem;
-  font-weight: 600;
-  color: white;
-}
+  .balance-actions {
+    width: 100%;
+    min-width: unset;
+  }
 
-.add-balance-btn {
-  width: 100%;
-  padding: 1rem;
-  background: #22c55e;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 1rem;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
+  .balance-input {
+    width: 100%;
+  }
 
-.add-balance-btn:hover {
-  background: #16a34a;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
-}
-
-.add-balance-btn i {
-  font-size: 1.2rem;
+  .order-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
 }

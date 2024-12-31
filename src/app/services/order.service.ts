@@ -1,183 +1,147 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { AngularFireDatabase } from '@angular/fire/compat/database';
+import { AuthService } from './auth.service';
+import { Observable, from, firstValueFrom, take } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { UserService } from './user.service';
 import { Order } from '../models/order.model';
+
+// Order'ı type olarak re-export ediyoruz
+export type { Order } from '../models/order.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class OrderService {
-  private orders: Order[] = [];
-  private ordersSubject = new BehaviorSubject<Order[]>([]);
-  orders$ = this.ordersSubject.asObservable();
+  constructor(
+    private db: AngularFireDatabase,
+    private authService: AuthService,
+    private userService: UserService
+  ) {}
 
-  constructor() {
-    this.loadOrders();
-  }
-
-  private loadOrders() {
-    try {
-      const allOrders: Order[] = [];
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-
-      // Kullanıcıları ve siparişlerini yükle
-      users.forEach((user: any) => {
-        const userOrders = localStorage.getItem(`orders_${user.id}`);
-        if (userOrders) {
-          // Siparişleri yüklerken güncel kullanıcı adını kullan
-          const orders = JSON.parse(userOrders).map((order: Order) => ({
-            ...order,
-            userName: user.name, // Güncel kullanıcı adını kullan
-          }));
-          allOrders.push(...orders);
-        }
-      });
-
-      this.orders = allOrders;
-      this.ordersSubject.next(this.orders);
-    } catch (error) {
-      console.error('Siparişleri yükleme hatası:', error);
-    }
-  }
-
-  getOrders(): Order[] {
-    return this.orders;
-  }
-
-  addOrder(order: Order) {
-    // Yeni siparişi orders dizisine ekle
-    this.orders.push(order);
-
-    // Kullanıcının siparişlerini güncelle
-    const userOrders = localStorage.getItem(`orders_${order.userId}`) || '[]';
-    const updatedUserOrders = [...JSON.parse(userOrders), order];
-    localStorage.setItem(
-      `orders_${order.userId}`,
-      JSON.stringify(updatedUserOrders)
-    );
-
-    // BehaviorSubject'i güncelle
-    this.ordersSubject.next(this.orders);
-  }
-
-  updateOrderStatus(orderId: number, status: string): void {
-    const order = this.orders.find((o) => o.id === orderId);
-    if (order) {
-      order.status = status;
-
-      // Kullanıcının siparişlerini güncelle
-      const userOrders = JSON.parse(
-        localStorage.getItem(`orders_${order.userId}`) || '[]'
-      );
-      const updatedUserOrders = userOrders.map((o: Order) =>
-        o.id === orderId ? { ...o, status } : o
-      );
-      localStorage.setItem(
-        `orders_${order.userId}`,
-        JSON.stringify(updatedUserOrders)
-      );
-
-      // BehaviorSubject'i güncelle
-      this.ordersSubject.next(this.orders);
-    }
-  }
-
-  // Yeni sipariş eklendiğinde tüm siparişleri yeniden yükle
-  refreshOrders() {
-    console.log('Siparişler yenileniyor...');
-    this.loadOrders();
-  }
-
-  cancelOrder(orderId: number): Observable<boolean> {
-    return new Observable((observer) => {
-      try {
-        // Önce siparişi bul
-        const orderToDelete = this.orders.find((order) => order.id === orderId);
-
-        if (!orderToDelete) {
-          observer.error(new Error('Sipariş bulunamadı'));
+  // createOrder metodunu ekleyelim
+  createOrder(orderData: Partial<Order>): Observable<void> {
+    return new Observable((subscriber) => {
+      this.authService.user$.pipe(take(1)).subscribe(async (user) => {
+        if (!user) {
+          subscriber.error(new Error('Kullanıcı bulunamadı'));
           return;
         }
 
-        // Siparişi ana listeden kaldır
-        this.orders = this.orders.filter((order) => order.id !== orderId);
+        try {
+          const orderId = this.db.createPushId();
+          const order: Order = {
+            id: orderId,
+            orderNumber: this.generateOrderNumber(),
+            orderDate: new Date().toISOString(),
+            status: 'Beklemede',
+            userId: user.uid,
+            userName:
+              user.displayName || user.email?.split('@')[0] || 'Misafir',
+            ...orderData,
+          } as Order;
 
-        // Kullanıcının siparişlerini güncelle
-        const userId = orderToDelete.userId;
-        let userOrders = JSON.parse(
-          localStorage.getItem(`orders_${userId}`) || '[]'
-        );
-        userOrders = userOrders.filter((order: Order) => order.id !== orderId);
-
-        // LocalStorage'ı güncelle
-        localStorage.setItem(`orders_${userId}`, JSON.stringify(userOrders));
-
-        // Tüm siparişleri içeren listeyi güncelle
-        const allUsers = JSON.parse(localStorage.getItem('users') || '[]');
-        allUsers.forEach((user: any) => {
-          const orders = JSON.parse(
-            localStorage.getItem(`orders_${user.id}`) || '[]'
-          );
-          if (orders.some((o: Order) => o.id === orderId)) {
-            const updatedOrders = orders.filter((o: Order) => o.id !== orderId);
-            localStorage.setItem(
-              `orders_${user.id}`,
-              JSON.stringify(updatedOrders)
-            );
-          }
-        });
-
-        // BehaviorSubject'i güncelle
-        this.ordersSubject.next(this.orders);
-
-        console.log('Sipariş silindi:', {
-          orderId,
-          userId,
-          remainingOrders: this.orders,
-          userOrders,
-        });
-
-        observer.next(true);
-        observer.complete();
-      } catch (error) {
-        console.error('Sipariş silme hatası:', error);
-        observer.error(error);
-      }
+          await this.db.object(`orders/${orderId}`).set(order);
+          subscriber.next();
+          subscriber.complete();
+        } catch (error) {
+          console.error('Sipariş oluşturma hatası:', error);
+          subscriber.error(error);
+        }
+      });
     });
   }
 
-  // Yardımcı metod: Belirli bir kullanıcının siparişlerini getir
-  getUserOrders(userId: number): Order[] {
-    const userOrders = localStorage.getItem(`orders_${userId}`);
-    return userOrders ? JSON.parse(userOrders) : [];
+  getOrders(): Observable<Order[]> {
+    return this.db
+      .list<Order>('orders', (ref) => ref.orderByChild('orderDate'))
+      .snapshotChanges()
+      .pipe(
+        map((changes: any[]) =>
+          changes.map((c: any) => {
+            const data = c.payload.val() as Order;
+            const id = c.payload.key as string;
+            return { ...data, id };
+          })
+        )
+      );
   }
 
-  // Kullanıcı adı güncellendiğinde siparişlerdeki kullanıcı adını güncelle
-  updateOrdersUserName(userId: number, newUserName: string) {
-    // Bellek üzerindeki siparişleri güncelle
-    this.orders = this.orders.map((order) => {
-      if (order.userId === userId) {
-        return { ...order, userName: newUserName };
-      }
-      return order;
-    });
+  getUserOrders(userId: string): Observable<Order[]> {
+    return this.db
+      .list<Order>('orders', (ref) =>
+        ref.orderByChild('userId').equalTo(userId)
+      )
+      .snapshotChanges()
+      .pipe(
+        map((changes: any[]) =>
+          changes
+            .map((c: any) => ({
+              ...(c.payload.val() as Order),
+              key: c.payload.key,
+            }))
+            .sort(
+              (a: Order, b: Order) =>
+                new Date(b.orderDate).getTime() -
+                new Date(a.orderDate).getTime()
+            )
+        )
+      );
+  }
 
-    // LocalStorage'daki siparişleri güncelle
-    const userOrders = JSON.parse(
-      localStorage.getItem(`orders_${userId}`) || '[]'
+  getRestaurantOrders(restaurantId: number): Observable<Order[]> {
+    return this.db
+      .list<Order>('orders', (ref) =>
+        ref.orderByChild('restaurantId').equalTo(restaurantId)
+      )
+      .valueChanges();
+  }
+
+  updateOrderStatus(
+    orderId: string,
+    status: Order['status']
+  ): Observable<void> {
+    return new Observable((subscriber) => {
+      this.db
+        .object(`orders/${orderId}`)
+        .update({ status })
+        .then(() => {
+          subscriber.next();
+          subscriber.complete();
+        })
+        .catch((error) => subscriber.error(error));
+    });
+  }
+
+  cancelOrder(orderId: string): Observable<void> {
+    return from(
+      this.db
+        .object(`orders/${orderId}`)
+        .remove()
+        .then(() => {
+          console.log('Sipariş başarıyla silindi:', orderId);
+        })
+        .catch((error: Error) => {
+          console.error('Sipariş silinirken hata:', error);
+          throw error;
+        })
     );
-    const updatedUserOrders = userOrders.map((order: Order) => ({
-      ...order,
-      userName: newUserName,
-    }));
-    localStorage.setItem(`orders_${userId}`, JSON.stringify(updatedUserOrders));
+  }
 
-    // BehaviorSubject'i güncelle
-    this.ordersSubject.next(this.orders);
+  refreshOrders(): void {
+    // Firebase Realtime Database otomatik güncelleniyor
+    // Bu metod sadece interface uyumluluğu için var
+  }
 
-    console.log('Siparişlerdeki kullanıcı adı güncellendi:', {
-      userId,
-      newUserName,
-      updatedOrders: this.orders,
-    });
+  private generateOrderNumber(): string {
+    const timestamp = Date.now().toString();
+    const random = Math.floor(Math.random() * 1000)
+      .toString()
+      .padStart(3, '0');
+    return `SP${timestamp.slice(-6)}${random}`;
+  }
+
+  getOrderById(orderId: string): Observable<Order | null> {
+    return this.db.object<Order>(`orders/${orderId}`).valueChanges();
   }
 }

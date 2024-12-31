@@ -1,203 +1,229 @@
 import { Injectable } from '@angular/core';
+import { AngularFireAuth } from '@angular/fire/compat/auth';
+import { AngularFireDatabase } from '@angular/fire/compat/database';
+import { Observable, BehaviorSubject, from, firstValueFrom } from 'rxjs';
+import { map, switchMap, take } from 'rxjs/operators';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
-import { RestaurantService } from './restaurant.service';
-import { UserService } from './user.service';
 
 export interface User {
-  id: number;
-  name: string;
+  uid: string;
   email: string;
-  password: string;
-  role: 'user' | 'admin';
+  name: string;
+  displayName?: string;
+  role?: 'user' | 'admin' | 'restaurant';
+  photoURL?: string;
+  isActive?: boolean;
+  password?: string;
+  phone?: string;
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private currentUserSubject: BehaviorSubject<User | null>;
-  public currentUser: Observable<User | null>;
+  private currentUserSubject = new BehaviorSubject<User | null>(null);
+  user$ = this.currentUserSubject.asObservable();
 
   constructor(
-    private router: Router,
-    private restaurantService: RestaurantService,
-    private userService: UserService
+    private auth: AngularFireAuth,
+    private db: AngularFireDatabase,
+    private router: Router
   ) {
-    this.currentUserSubject = new BehaviorSubject<User | null>(
-      JSON.parse(localStorage.getItem('currentUser') || 'null')
-    );
-    this.currentUser = this.currentUserSubject.asObservable();
-    this.initializeAdmin();
+    this.initializeAuthState();
   }
 
-  private getUserFromStorage(): User | null {
-    const user = localStorage.getItem('currentUser');
-    return user ? JSON.parse(user) : null;
-  }
-
-  public get currentUserValue(): User | null {
+  get currentUserValue(): User | null {
     return this.currentUserSubject.value;
-  }
-
-  register(user: Omit<User, 'id'>): boolean {
-    const users: User[] = JSON.parse(localStorage.getItem('users') || '[]');
-
-    if (users.some((u) => u.email === user.email)) {
-      return false;
-    }
-
-    const newUser: User = {
-      id: users.length + 1,
-      ...user,
-    };
-
-    users.push(newUser);
-    localStorage.setItem('users', JSON.stringify(users));
-
-    // Yeni kullanıcı için bakiye oluştur
-    const balanceKey = `userBalance_${newUser.id}`;
-    localStorage.setItem(balanceKey, '0'); // Başlangıç bakiyesi 0
-
-    return true;
-  }
-
-  login(email: string, password: string): boolean {
-    const users = this.getUsers();
-    const user = users.find(
-      (u) => u.email === email && u.password === password
-    );
-
-    if (user) {
-      localStorage.setItem('currentUser', JSON.stringify(user));
-      this.currentUserSubject.next(user);
-
-      this.userService.saveUserData(user);
-
-      if (user.role === 'admin') {
-        this.router.navigate(['/admin']);
-      } else {
-        this.router.navigate(['/restaurant']);
-      }
-      return true;
-    }
-    return false;
-  }
-
-  logout(): void {
-    localStorage.removeItem('currentUser');
-    this.restaurantService.clearLocalStorage(); // Çıkış yaparken de temizle
-    this.currentUserSubject.next(null);
-    this.router.navigate(['/signin']);
   }
 
   isLoggedIn(): boolean {
     return !!this.currentUserValue;
   }
 
-  initializeAdmin() {
-    const users = this.getUsers();
-    const adminExists = users.some((user) => user.role === 'admin');
+  getUsers(): Observable<User[]> {
+    return this.db
+      .list<User>('users')
+      .snapshotChanges()
+      .pipe(
+        map((changes) =>
+          changes.map((c) => ({
+            ...(c.payload.val() as User),
+            uid: c.payload.key as string,
+          }))
+        )
+      );
+  }
 
-    if (!adminExists) {
-      const admin: User = {
-        id: 1,
-        name: 'Admin',
-        email: 'admin@yemek23.com',
-        password: 'admin123',
-        role: 'admin',
+  getUserData(uid: string): Observable<User | null> {
+    return this.db
+      .object(`users/${uid}`)
+      .valueChanges()
+      .pipe(
+        map((user: any) => {
+          if (!user) return null;
+          return {
+            ...user,
+            uid,
+            isActive: user.isActive !== false,
+          } as User;
+        })
+      );
+  }
+
+  updateUser(userData: Partial<User>): Observable<void> {
+    if (!userData.uid) {
+      throw new Error('Kullanıcı ID gerekli');
+    }
+
+    const updateData = {
+      ...(userData.name && { name: userData.name }),
+      ...(userData.email && { email: userData.email }),
+      ...(userData.role && { role: userData.role }),
+      ...(userData.photoURL && { photoURL: userData.photoURL }),
+      ...(userData.displayName && { displayName: userData.displayName }),
+      ...(userData.phone && { phone: userData.phone }),
+      ...(typeof userData.isActive !== 'undefined' && {
+        isActive: userData.isActive,
+      }),
+      updatedAt: new Date().toISOString(),
+    };
+
+    return from(this.db.object(`users/${userData.uid}`).update(updateData));
+  }
+
+  async login(email: string, password: string): Promise<void> {
+    try {
+      const credential = await this.auth.signInWithEmailAndPassword(
+        email,
+        password
+      );
+      if (credential.user) {
+        const userData = await this.getUserData(credential.user.uid)
+          .pipe(take(1))
+          .toPromise();
+        if (userData) {
+          this.currentUserSubject.next(userData);
+          localStorage.setItem('user', JSON.stringify(userData));
+        }
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
+  }
+
+  async register(
+    email: string,
+    password: string,
+    displayName: string
+  ): Promise<void> {
+    const credential = await this.auth.createUserWithEmailAndPassword(
+      email,
+      password
+    );
+    if (credential.user) {
+      const userData: User = {
+        uid: credential.user.uid,
+        email,
+        name: displayName,
+        displayName,
+        role: 'user',
+        isActive: true,
       };
-
-      users.push(admin);
-      localStorage.setItem('users', JSON.stringify(users));
+      await this.db.object(`users/${credential.user.uid}`).set(userData);
     }
   }
 
-  getUsers(): User[] {
-    const users = localStorage.getItem('users');
-    return users ? JSON.parse(users) : [];
+  private async initializeAuthState() {
+    this.auth.authState.subscribe(async (firebaseUser) => {
+      if (firebaseUser) {
+        this.getUserData(firebaseUser.uid)
+          .pipe(take(1))
+          .subscribe((userData) => {
+            if (userData) {
+              this.currentUserSubject.next(userData);
+            }
+          });
+      } else {
+        this.currentUserSubject.next(null);
+      }
+    });
   }
 
-  getAllUsers(): any[] {
-    // Örnek kullanıcı listesi - gerçek uygulamada API'den gelecek
-    return [
-      {
-        id: 1,
-        name: 'Admin User',
-        email: 'admin@example.com',
-        role: 'admin',
-      },
-      {
-        id: 2,
-        name: 'John Doe',
-        email: 'john@example.com',
-        role: 'user',
-      },
-      {
-        id: 3,
-        name: 'Jane Smith',
-        email: 'jane@example.com',
-        role: 'user',
-      },
-      // ... diğer kullanıcılar
-    ];
+  async logout(): Promise<void> {
+    await this.auth.signOut();
+    localStorage.removeItem('user');
+    this.currentUserSubject.next(null);
+    this.router.navigate(['/signin']);
   }
 
-  deleteUser(userId: number): void {
-    let users = this.getUsers();
-    users = users.filter((user) => user.id !== userId);
-    localStorage.setItem('users', JSON.stringify(users));
-  }
+  async getCurrentUser(): Promise<User | null> {
+    const firebaseUser = await this.auth.currentUser;
+    if (!firebaseUser) return null;
 
-  updateUser(updatedUser: User): void {
-    let users = this.getUsers();
-    const index = users.findIndex((user) => user.id === updatedUser.id);
-    if (index !== -1) {
-      users[index] = updatedUser;
-      localStorage.setItem('users', JSON.stringify(users));
+    try {
+      const userData = await firstValueFrom(this.getUserData(firebaseUser.uid));
+      return userData || null;
+    } catch (error) {
+      console.error('Kullanıcı bilgileri alınırken hata:', error);
+      return null;
     }
   }
 
-  resetPassword(
+  async resetPassword(
     username: string,
     email: string,
     newPassword: string
-  ): Observable<boolean> {
-    console.log('Şifre sıfırlama parametreleri:', {
-      username,
-      email,
-      newPassword,
-    }); // Debug için
+  ): Promise<boolean> {
+    try {
+      const userSnapshot = await this.db
+        .list('users', (ref) => ref.orderByChild('email').equalTo(email))
+        .query.once('value');
 
-    let users = this.getUsers();
-    console.log('Mevcut kullanıcılar:', users); // Debug için
+      const userData = userSnapshot.val();
+      if (!userData) throw new Error('Kullanıcı bulunamadı');
 
-    const userIndex = users.findIndex(
-      (u) =>
-        u.name.toLowerCase() === username.toLowerCase() &&
-        u.email.toLowerCase() === email.toLowerCase()
+      const userId = Object.keys(userData)[0];
+      const user = userData[userId];
+
+      if (user.displayName !== username) {
+        throw new Error('Kullanıcı adı eşleşmiyor');
+      }
+
+      const firebaseUser = await this.auth.currentUser;
+      if (firebaseUser) {
+        await firebaseUser.updatePassword(newPassword);
+      }
+
+      await this.db.object(`users/${userId}`).update({
+        password: newPassword,
+        updatedAt: new Date().toISOString(),
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Şifre sıfırlama hatası:', error);
+      throw error;
+    }
+  }
+
+  deleteUser(uid: string): Observable<void> {
+    return from(
+      this.db
+        .object(`users/${uid}`)
+        .update({
+          isActive: false,
+          deletedAt: new Date().toISOString(),
+        })
+        .then(async () => {
+          if (this.currentUserValue?.uid === uid) {
+            await this.logout();
+          }
+        })
+        .catch((error) => {
+          console.error('Kullanıcı silinirken hata:', error);
+          throw error;
+        })
     );
-
-    if (userIndex === -1) {
-      console.log('Kullanıcı bulunamadı'); // Debug için
-      return throwError(() => new Error('Kullanıcı bulunamadı!'));
-    }
-
-    // Kullanıcının şifresini güncelle
-    users[userIndex].password = newPassword;
-
-    // Kullanıcılar listesini localStorage'da güncelle
-    localStorage.setItem('users', JSON.stringify(users));
-
-    console.log('Şifre güncellendi:', users[userIndex]); // Debug için
-
-    // Eğer giriş yapmış kullanıcının şifresi değiştiyse, oturumu güncelle
-    const currentUser = this.currentUserValue;
-    if (currentUser && currentUser.id === users[userIndex].id) {
-      localStorage.setItem('currentUser', JSON.stringify(users[userIndex]));
-      this.currentUserSubject.next(users[userIndex]);
-    }
-
-    return of(true);
   }
 }

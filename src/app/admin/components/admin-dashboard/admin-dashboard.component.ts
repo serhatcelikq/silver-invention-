@@ -1,106 +1,149 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RestaurantService } from '../../../services/restaurant.service';
 import { OrderService } from '../../../services/order.service';
-import { Restaurant } from '../../../models/restaurant.model';
-import { Order } from '../../../models/order.model';
-import { Subscription } from 'rxjs';
+import { UserService } from '../../../services/user.service';
+import { RestaurantService } from '../../../services/restaurant.service';
+import Chart from 'chart.js/auto';
 
 @Component({
   selector: 'app-admin-dashboard',
-  standalone: true,
-  imports: [CommonModule],
   templateUrl: './admin-dashboard.component.html',
   styleUrls: ['./admin-dashboard.component.css'],
+  standalone: true,
+  imports: [CommonModule],
 })
-export class AdminDashboardComponent implements OnInit, OnDestroy {
-  totalRestaurants: number = 0;
-  activeOrders: number = 0;
+export class AdminDashboardComponent implements OnInit {
+  @ViewChild('orderChart') orderChart!: ElementRef;
+  @ViewChild('revenueChart') revenueChart!: ElementRef;
+
+  userCount: number = 0;
+  restaurantCount: number = 0;
+  orderCount: number = 0;
   totalRevenue: number = 0;
-  totalCategories: number = 0;
-  monthlyOrders: number[] = [];
-  popularRestaurants: any[] = [];
-  private orderSubscription: Subscription;
-  private restaurants: Restaurant[] = [];
+  recentOrders: any[] = [];
 
   constructor(
-    private restaurantService: RestaurantService,
-    private orderService: OrderService
-  ) {
-    this.orderSubscription = this.orderService.orders$.subscribe((orders) => {
-      this.activeOrders = orders.filter(
-        (o) => o.status !== 'Tamamlandı'
-      ).length;
-      this.totalRevenue = orders.reduce(
-        (sum, order) => sum + order.totalAmount,
-        0
-      );
-      this.calculateMonthlyOrders(orders);
-      this.calculatePopularRestaurants(this.restaurants, orders);
-    });
-  }
+    private orderService: OrderService,
+    private userService: UserService,
+    private restaurantService: RestaurantService
+  ) {}
 
   ngOnInit() {
     this.loadDashboardData();
   }
 
-  ngOnDestroy() {
-    if (this.orderSubscription) {
-      this.orderSubscription.unsubscribe();
-    }
-  }
-
   loadDashboardData() {
+    // Kullanıcı sayısını al
+    this.userService.getUsers().subscribe((users) => {
+      this.userCount = users.length;
+    });
+
+    // Restoran sayısını al
     this.restaurantService.getRestaurants().subscribe((restaurants) => {
-      this.restaurants = restaurants;
-      this.totalRestaurants = restaurants.length;
-      const categories = new Set(restaurants.map((r) => r.category));
-      this.totalCategories = categories.size;
+      this.restaurantCount = restaurants.length;
+    });
 
-      // Mevcut siparişleri al
-      const orders = this.orderService.getOrders();
-      this.calculatePopularRestaurants(restaurants, orders);
+    // Sipariş verilerini al
+    this.orderService.getOrders().subscribe((orders) => {
+      this.orderCount = orders.length;
+      this.totalRevenue = orders.reduce(
+        (sum, order) => sum + order.totalAmount,
+        0
+      );
+      this.recentOrders = orders.slice(-5); // Son 5 sipariş
+
+      // Grafikleri oluştur
+      this.createOrderChart(orders);
+      this.createRevenueChart(orders);
     });
   }
 
-  calculatePopularRestaurants(restaurants: Restaurant[], orders: Order[]) {
-    const restaurantOrders = new Map<number, number>();
-
-    // Her restoran için sipariş sayısını hesapla
-    orders.forEach((order) => {
-      const count = restaurantOrders.get(order.restaurantId) || 0;
-      restaurantOrders.set(order.restaurantId, count + 1);
-    });
-
-    // Restoranları sipariş sayısına göre sırala
-    this.popularRestaurants = restaurants
-      .map((restaurant) => ({
-        name: restaurant.name,
-        popularity:
-          ((restaurantOrders.get(restaurant.id) || 0) / orders.length) * 100,
-      }))
-      .sort((a, b) => b.popularity - a.popularity)
-      .slice(0, 5);
-  }
-
-  calculateMonthlyOrders(orders: Order[]) {
-    // Son 12 ayın sipariş sayılarını hesapla
+  createOrderChart(orders: any[]) {
     const monthlyData = new Array(12).fill(0);
-    const currentDate = new Date();
-
     orders.forEach((order) => {
-      const orderDate = new Date(order.orderDate);
-      const monthDiff =
-        (currentDate.getMonth() - orderDate.getMonth() + 12) % 12;
-      if (monthDiff < 12) {
-        monthlyData[11 - monthDiff]++;
-      }
+      const month = new Date(order.orderDate).getMonth();
+      monthlyData[month]++;
     });
 
-    // Yüzdelik değerlere çevir
-    const maxOrders = Math.max(...monthlyData);
-    this.monthlyOrders = monthlyData.map((value) =>
-      maxOrders > 0 ? (value / maxOrders) * 100 : 0
-    );
+    const ctx = this.orderChart.nativeElement.getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [
+          'Oca',
+          'Şub',
+          'Mar',
+          'Nis',
+          'May',
+          'Haz',
+          'Tem',
+          'Ağu',
+          'Eyl',
+          'Eki',
+          'Kas',
+          'Ara',
+        ],
+        datasets: [
+          {
+            label: 'Aylık Sipariş Sayısı',
+            data: monthlyData,
+            borderColor: '#2196F3',
+            tension: 0.4,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+        },
+      },
+    });
+  }
+
+  createRevenueChart(orders: any[]) {
+    const monthlyRevenue = new Array(12).fill(0);
+    orders.forEach((order) => {
+      const month = new Date(order.orderDate).getMonth();
+      monthlyRevenue[month] += order.totalAmount;
+    });
+
+    const ctx = this.revenueChart.nativeElement.getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: [
+          'Oca',
+          'Şub',
+          'Mar',
+          'Nis',
+          'May',
+          'Haz',
+          'Tem',
+          'Ağu',
+          'Eyl',
+          'Eki',
+          'Kas',
+          'Ara',
+        ],
+        datasets: [
+          {
+            label: 'Aylık Gelir (TL)',
+            data: monthlyRevenue,
+            backgroundColor: '#4CAF50',
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+        },
+      },
+    });
   }
 }

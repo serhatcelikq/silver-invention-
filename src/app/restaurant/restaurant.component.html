@@ -1,173 +1,113 @@
 <div class="restaurant-container">
-  <!-- Arama ve Filtreleme Bölümü -->
-  <div class="search-filter-section">
-    <div class="search-controls">
-      <div class="search-box">
-        <i class="fas fa-search"></i>
+  <!-- Yeni arama ve filtre bölümü -->
+  <div class="search-bar-container">
+    <div class="search-input-wrapper">
+      <i class="fas fa-search search-icon"></i>
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (input)="searchRestaurants()"
+        placeholder="Restoran veya yemek ara..."
+        class="search-input"
+      />
+    </div>
+    <button class="filter-button" (click)="toggleFilterMenu()">
+      <i class="fas fa-sliders-h"></i>
+      Filtrele
+    </button>
+  </div>
+
+  <!-- Filtre menüsü -->
+  <div class="filter-menu" [class.active]="isFilterMenuOpen">
+    <div class="filter-section">
+      <h3><i class="fas fa-fire"></i> Popüler Filtreler</h3>
+      <div class="popular-filters">
+        <button
+          *ngFor="let tag of popularFilters"
+          class="filter-tag"
+          (click)="togglePopularFilter(tag)"
+        >
+          {{ tag }}
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <h3><i class="fas fa-utensils"></i> Mutfak Türü</h3>
+      <div class="cuisine-filters">
+        <div *ngFor="let cuisine of cuisineTypes" class="cuisine-checkbox">
+          <input
+            type="checkbox"
+            [id]="cuisine"
+            [checked]="selectedCuisines.includes(cuisine)"
+            (change)="toggleCuisine(cuisine)"
+          />
+          <label [for]="cuisine">{{ cuisine }}</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <h3><i class="fas fa-star"></i> Minimum Puan</h3>
+      <div class="rating-slider">
         <input
-          type="text"
-          [(ngModel)]="searchTerm"
-          (input)="searchRestaurants()"
-          placeholder="Restoran ara..."
+          type="range"
+          [(ngModel)]="minRating"
+          min="0"
+          max="5"
+          step="0.5"
+          (change)="applyFilters()"
         />
+        <span>{{ minRating }} yıldız ve üzeri</span>
       </div>
-
-      <button class="filter-btn" (click)="toggleFilterMenu()">
-        <i class="fas fa-filter"></i>
-        Filtrele
-      </button>
-
-      <button class="filter-btn show-all-btn" (click)="showAllRestaurants()">
-        <i class="fas fa-list"></i>
-        Tümünü Görüntüle
-      </button>
     </div>
+  </div>
 
-    <!-- Filtre menüsü arka planı -->
-    <div
-      class="filter-menu-backdrop"
-      [class.active]="isFilterMenuOpen"
-      (click)="toggleFilterMenu()"
-    ></div>
+  <!-- Yükleniyor göstergesi -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    Restoranlar yükleniyor...
+  </div>
 
-    <!-- Filtre menüsü -->
-    <div class="filter-menu" [class.active]="isFilterMenuOpen">
-      <!-- En Çok Aranan Filtreler -->
-      <div class="filter-group popular-filters">
-        <h4>En Çok Aranan</h4>
-        <div class="popular-tags">
-          <button
-            *ngFor="let tag of popularFilters"
-            class="filter-tag"
-            [class.active]="selectedCuisines.includes(tag)"
-            (click)="togglePopularFilter(tag)"
+  <!-- Restoran Listesi -->
+  <div class="restaurant-list" *ngIf="!loading">
+    <div class="restaurant-card" *ngFor="let restaurant of filteredRestaurants">
+      <div class="favorite-icon" (click)="toggleFavorite(restaurant)">
+        <i
+          class="fas fa-star"
+          [class.favorite-active]="restaurant.isFavorite"
+          [title]="
+            restaurant.isFavorite ? 'Favorilerden kaldır' : 'Favorilere ekle'
+          "
+        ></i>
+      </div>
+      <div class="restaurant-info">
+        <h3>{{ restaurant.name }}</h3>
+        <p class="cuisine">{{ restaurant.category }}</p>
+        <div class="rating">
+          <span class="stars">
+            <i class="fas fa-star"></i>
+            {{ restaurant.rating }}
+          </span>
+          <span class="review-count"
+            >({{ restaurant.reviews }} değerlendirme)</span
           >
-            {{ tag }}
-          </button>
         </div>
-      </div>
-
-      <!-- Mutfak Türü -->
-      <div class="filter-group">
-        <h4>Mutfak Türü</h4>
-        <div class="checkbox-group">
-          <label *ngFor="let cuisine of cuisineTypes">
-            <input
-              type="checkbox"
-              [checked]="selectedCuisines.includes(cuisine)"
-              (change)="toggleCuisine(cuisine)"
-            />
-            {{ cuisine }}
-          </label>
-        </div>
-      </div>
-
-      <!-- Minimum Puan -->
-      <div class="filter-group">
-        <h4>Minimum Puan</h4>
-        <div class="rating-filter">
-          <select [(ngModel)]="minRating" (change)="applyFilters()">
-            <option [value]="0">Tümü</option>
-            <option [value]="3">3+ Yıldız</option>
-            <option [value]="4">4+ Yıldız</option>
-            <option [value]="4.5">4.5+ Yıldız</option>
-          </select>
-        </div>
-      </div>
-
-      <button class="apply-filters-btn" (click)="applyFilters()">
-        Filtreleri Uygula
-      </button>
-    </div>
-  </div>
-
-  <!-- Favorilere eklendi bildirimi -->
-  <div class="favorite-notification" [class.show]="showNotification">
-    <i class="fas fa-check-circle"></i>
-    <span>{{ notificationMessage }}</span>
-  </div>
-
-  <!-- Önerilen Restoranlar -->
-  <div class="recommended-section" *ngIf="!searchTerm && !hasActiveFilters()">
-    <h2>Önerilen Restoranlar</h2>
-    <div class="restaurant-list">
-      <div
-        class="restaurant-card"
-        *ngFor="let restaurant of recommendedRestaurants"
-      >
-        <div class="favorite-icon" (click)="toggleFavorite(restaurant)">
-          <i
-            class="fas fa-star"
-            [class.favorite-active]="restaurant.isFavorite"
-          ></i>
-        </div>
-        <img
-          [src]="restaurant.url"
-          [alt]="restaurant.name"
-          onerror="this.src='https://via.placeholder.com/300x200?text=Restaurant'"
-        />
-        <div class="restaurant-info">
-          <h3>{{ restaurant.name }}</h3>
-          <p class="cuisine">{{ restaurant.category }}</p>
-          <div class="rating">
-            <span class="stars">
-              <i
-                class="fas fa-star"
-                *ngFor="let star of [1, 2, 3, 4, 5].slice(0, restaurant.rating)"
-              ></i>
-            </span>
-            <span class="review-count"
-              >({{ restaurant.reviews }} değerlendirme)</span
-            >
-          </div>
-          <p class="address">{{ restaurant.address }}</p>
-          <button class="order-btn" (click)="navigateToOrder(restaurant)">
-            Sipariş Ver
-          </button>
-        </div>
+        <p class="address">{{ restaurant.address }}</p>
+        <button class="order-btn" (click)="navigateToOrder(restaurant)">
+          Sipariş Ver
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- Filtrelenmiş veya Aranmış Restoranlar -->
-  <div class="filtered-section" *ngIf="searchTerm || hasActiveFilters()">
-    <h2>{{ searchTerm ? "Arama Sonuçları" : "Filtrelenmiş Restoranlar" }}</h2>
-    <div class="restaurant-list">
-      <div
-        class="restaurant-card"
-        *ngFor="let restaurant of filteredRestaurants"
-      >
-        <div class="favorite-icon" (click)="toggleFavorite(restaurant)">
-          <i
-            class="fas fa-star"
-            [class.favorite-active]="restaurant.isFavorite"
-          ></i>
-        </div>
-        <img
-          [src]="restaurant.url"
-          [alt]="restaurant.name"
-          onerror="this.src='https://via.placeholder.com/300x200?text=Restaurant'"
-        />
-        <div class="restaurant-info">
-          <h3>{{ restaurant.name }}</h3>
-          <p class="cuisine">{{ restaurant.category }}</p>
-          <div class="rating">
-            <span class="stars">
-              <i
-                class="fas fa-star"
-                *ngFor="let star of [1, 2, 3, 4, 5].slice(0, restaurant.rating)"
-              ></i>
-            </span>
-            <span class="review-count"
-              >({{ restaurant.reviews }} değerlendirme)</span
-            >
-          </div>
-          <p class="address">{{ restaurant.address }}</p>
-          <button class="order-btn" (click)="navigateToOrder(restaurant)">
-            Sipariş Ver
-          </button>
-        </div>
-      </div>
-    </div>
+  <!-- Restoran bulunamadı mesajı -->
+  <div *ngIf="filteredRestaurants.length === 0 && !loading" class="no-results">
+    <p>Restoran bulunamadı</p>
+  </div>
+
+  <!-- Bildirim mesajı -->
+  <div *ngIf="showNotification" class="notification">
+    {{ notificationMessage }}
   </div>
 </div>

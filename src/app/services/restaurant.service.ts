@@ -1,284 +1,268 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, of, throwError, delay, tap } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { NotificationService } from './notification.service';
+import { AngularFireDatabase } from '@angular/fire/compat/database';
+import { Observable, from, map, switchMap, take, of } from 'rxjs';
 
 export interface MenuItem {
   id: number;
-  category: string;
   name: string;
-  description: string;
   price: number;
-  portion: string;
-  quantity: number;
+  description?: string;
+  category?: string;
+  portion?: string;
+  quantity?: number;
+}
+
+export interface Employee {
+  id: number;
+  name: string;
+  position: string;
+  phone: string;
+  email: string;
+  startDate: string;
 }
 
 export interface Restaurant {
-  id: number;
+  id: string;
   name: string;
-  rating: number;
-  reviews: number;
   category: string;
-  products: string[];
   address: string;
   phone: string;
-  url: string;
-  isFavorite: boolean;
+  rating?: number;
+  reviews?: number;
   menu: MenuItem[];
+  employees?: Employee[];
+  url?: string;
+  image?: string;
+  isFavorite?: boolean;
+  owner?: {
+    id?: string;
+    name: string;
+    email: string;
+    phone: string;
+    password?: string;
+  };
+}
+
+export interface Order {
+  id?: string;
+  userId: string;
+  userName?: string;
+  restaurantId: string;
+  restaurantName: string;
+  items: MenuItem[];
+  totalAmount: number;
+  status: 'pending' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
+  orderDate: string;
+  orderNumber: string;
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class RestaurantService {
-  private jsonUrl = './assets/data/restaurants.json';
-  private DELETED_IDS_KEY = 'deletedRestaurantIds';
-  private RESTAURANTS_KEY = 'restaurants';
-  private deletedRestaurantIds: Set<number>;
-
-  constructor(
-    private http: HttpClient,
-    private notificationService: NotificationService
-  ) {
-    // Silinen ID'leri yükle
-    this.deletedRestaurantIds = new Set(this.getDeletedRestaurantIds());
-    // İlk veri yüklemesi
-    this.initializeData();
-  }
-
-  private getDeletedRestaurantIds(): number[] {
-    const deletedIds = localStorage.getItem(this.DELETED_IDS_KEY);
-    return deletedIds ? JSON.parse(deletedIds) : [];
-  }
-
-  private initializeData(): void {
-    // JSON'dan verileri al ve silinen ID'leri filtrele
-    this.http
-      .get<{ restaurants: Restaurant[] }>(this.jsonUrl)
-      .subscribe((response) => {
-        const filteredRestaurants = response.restaurants.filter(
-          (r: Restaurant) => !this.deletedRestaurantIds.has(r.id)
-        );
-        this.saveToStorage(filteredRestaurants);
-      });
-  }
-
-  private saveToStorage(restaurants: Restaurant[]): void {
-    localStorage.setItem(this.RESTAURANTS_KEY, JSON.stringify({ restaurants }));
-  }
+  constructor(private db: AngularFireDatabase) {}
 
   getRestaurants(): Observable<Restaurant[]> {
-    return new Observable<Restaurant[]>((observer) => {
-      // Önce kalıcı veriyi kontrol et
-      const permanentData = localStorage.getItem('permanentRestaurants');
-
-      if (permanentData) {
-        try {
-          const data = JSON.parse(permanentData);
-          const filteredRestaurants = data.restaurants.filter(
-            (r: Restaurant) => !this.deletedRestaurantIds.has(r.id)
-          );
-          observer.next(filteredRestaurants);
-          observer.complete();
-        } catch (error) {
-          // Kalıcı veri bozuksa JSON'dan yükle
-          this.loadFromJson(observer);
-        }
-      } else {
-        // Kalıcı veri yoksa JSON'dan yükle
-        this.loadFromJson(observer);
-      }
-    });
+    return this.db
+      .list<Restaurant>('restaurants')
+      .snapshotChanges()
+      .pipe(
+        map((changes) =>
+          changes.map((c) => ({
+            ...(c.payload.val() as Restaurant),
+            id: c.payload.key as string,
+          }))
+        )
+      );
   }
 
-  private loadFromJson(observer: any): void {
-    this.http.get<{ restaurants: Restaurant[] }>(this.jsonUrl).subscribe({
-      next: (response) => {
-        const filteredRestaurants = response.restaurants.filter(
-          (r: Restaurant) => !this.deletedRestaurantIds.has(r.id)
+  getRestaurantById(id: string): Observable<Restaurant | null> {
+    return this.db.object<Restaurant>(`restaurants/${id}`).valueChanges();
+  }
+
+  addRestaurant(restaurant: Restaurant): Observable<void> {
+    const newId = this.db.createPushId();
+    restaurant.id = newId;
+    return from(this.db.object(`restaurants/${newId}`).set(restaurant));
+  }
+
+  updateRestaurant(
+    restaurantId: string,
+    updateData: Partial<Restaurant>
+  ): Observable<void> {
+    return from(
+      this.db.object(`restaurants/${restaurantId}`).update(updateData)
+    );
+  }
+
+  deleteRestaurant(restaurantId: string): Observable<void> {
+    return from(this.db.object(`restaurants/${restaurantId}`).remove());
+  }
+
+  // Menü işlemleri
+  addMenuItem(restaurantId: string, menuItem: MenuItem): Observable<void> {
+    return this.getRestaurantById(restaurantId).pipe(
+      switchMap((restaurant) => {
+        if (!restaurant) throw new Error('Restoran bulunamadı');
+        const menu = restaurant.menu || [];
+        menu.push({ ...menuItem, id: Date.now() });
+        return from(
+          this.db.object(`restaurants/${restaurantId}/menu`).set(menu)
         );
-        this.persistRestaurants(filteredRestaurants);
-        observer.next(filteredRestaurants);
-        observer.complete();
-      },
-      error: (error) => observer.error(error),
-    });
+      })
+    );
   }
 
-  getRestaurantById(id: number): Observable<Restaurant | undefined> {
+  // Çalışan işlemleri
+  addEmployee(restaurantId: string, employee: Employee): Observable<void> {
+    return this.getRestaurantById(restaurantId).pipe(
+      switchMap((restaurant) => {
+        if (!restaurant) throw new Error('Restoran bulunamadı');
+        const employees = restaurant.employees || [];
+        employees.push({ ...employee, id: Date.now() });
+        return from(
+          this.db.object(`restaurants/${restaurantId}/employees`).set(employees)
+        );
+      })
+    );
+  }
+
+  updateEmployee(restaurantId: string, employee: Employee): Observable<void> {
+    return from(
+      this.db
+        .object(`restaurants/${restaurantId}/employees/${employee.id}`)
+        .update(employee)
+    );
+  }
+
+  deleteEmployee(restaurantId: string, employeeId: number): Observable<void> {
+    return from(
+      this.db
+        .object(`restaurants/${restaurantId}/employees/${employeeId}`)
+        .remove()
+    );
+  }
+
+  // Favori işlemleri
+  getFavorites(): Observable<Restaurant[]> {
     return this.getRestaurants().pipe(
-      map((restaurants) => restaurants.find((r) => r.id === id))
+      map((restaurants) => restaurants.filter((r) => r.isFavorite))
     );
   }
 
-  updateRestaurant(restaurant: Restaurant): Observable<Restaurant> {
-    return new Observable<Restaurant>((observer) => {
-      try {
-        // Önce JSON dosyasından tüm restoranları al
-        this.http.get<{ restaurants: Restaurant[] }>(this.jsonUrl).subscribe({
-          next: (response) => {
-            let allRestaurants = response.restaurants;
-
-            // Güncellenecek restoranı bul
-            const index = allRestaurants.findIndex(
-              (r: Restaurant) => r.id === restaurant.id
-            );
-
-            if (index !== -1) {
-              // Restoranı güncelle
-              allRestaurants[index] = restaurant;
-
-              // Silinen restoranları filtrele
-              const filteredRestaurants = allRestaurants.filter(
-                (r: Restaurant) => !this.deletedRestaurantIds.has(r.id)
-              );
-
-              // Güncellenmiş listeyi localStorage'a kaydet
-              this.persistRestaurants(filteredRestaurants);
-
-              // Başarılı mesajı gönder
-              this.notificationService.showSuccess(
-                'Restoran bilgileri başarıyla güncellendi'
-              );
-              observer.next(restaurant);
-              observer.complete();
-            } else {
-              throw new Error('Restoran bulunamadı');
-            }
-          },
-          error: (error) => {
-            this.notificationService.showError(
-              'Restoran güncellenirken bir hata oluştu'
-            );
-            observer.error(error);
-          },
-        });
-      } catch (error) {
-        this.notificationService.showError(
-          'Restoran güncellenirken bir hata oluştu'
-        );
-        observer.error(error);
-      }
-    }).pipe(delay(500));
+  toggleFavorite(restaurant: Restaurant): Observable<void> {
+    return from(
+      this.db
+        .object(`restaurants/${restaurant.id}`)
+        .update({ isFavorite: !restaurant.isFavorite })
+    );
   }
 
-  deleteRestaurant(id: number): Observable<boolean> {
-    return new Observable<boolean>((observer) => {
-      try {
-        // ID'yi silinen listesine ekle
-        this.deletedRestaurantIds.add(id);
-        localStorage.setItem(
-          this.DELETED_IDS_KEY,
-          JSON.stringify(Array.from(this.deletedRestaurantIds))
-        );
-
-        // Mevcut restoranları güncelle
-        const storedData = localStorage.getItem(this.RESTAURANTS_KEY);
-        if (storedData) {
-          const data = JSON.parse(storedData);
-          const filteredRestaurants = data.restaurants.filter(
-            (r: Restaurant) => r.id !== id
-          );
-          this.saveToStorage(filteredRestaurants);
-
-          // JSON dosyasını da güncelle (simüle edilmiş)
-          this.http
-            .get<{ restaurants: Restaurant[] }>(this.jsonUrl)
-            .subscribe((response) => {
-              const updatedRestaurants = response.restaurants.filter(
-                (r: Restaurant) => !this.deletedRestaurantIds.has(r.id)
-              );
-              this.saveToStorage(updatedRestaurants);
-            });
-        }
-
-        this.notificationService.showSuccess('Restoran başarıyla silindi');
-        observer.next(true);
-        observer.complete();
-      } catch (error) {
-        this.notificationService.showError(
-          'Restoran silinirken bir hata oluştu'
-        );
-        observer.error(error);
-      }
-    }).pipe(delay(500));
+  // Sipariş işlemleri
+  getAllOrders(): Observable<Order[]> {
+    return this.db.list<Order>('orders').valueChanges();
   }
 
-  addRestaurant(restaurant: Omit<Restaurant, 'id'>): Observable<Restaurant> {
-    return new Observable<Restaurant>((observer) => {
-      this.getRestaurants().subscribe((restaurants) => {
-        const newRestaurant = {
-          ...restaurant,
-          id: this.generateNewId(restaurants),
-          isFavorite: false,
-        } as Restaurant;
+  getRestaurantOrders(restaurantId: string): Observable<Order[]> {
+    return this.db
+      .list<Order>('orders', (ref) =>
+        ref.orderByChild('restaurantId').equalTo(restaurantId)
+      )
+      .snapshotChanges()
+      .pipe(
+        map((changes) =>
+          changes.map((c) => ({
+            ...(c.payload.val() as Order),
+            key: c.payload.key,
+          }))
+        )
+      );
+  }
 
-        const updatedRestaurants = [...restaurants, newRestaurant];
+  getUserOrders(userId: string): Observable<Order[]> {
+    return this.db.list<Order>(`user-orders/${userId}`).valueChanges();
+  }
 
-        // JSON dosyasını güncelle
-        this.saveToJson(updatedRestaurants).subscribe(
-          () => {
-            observer.next(newRestaurant);
-            this.notificationService.showSuccess(
-              'Yeni restoran başarıyla eklendi'
-            );
-            observer.complete();
-          },
-          (error) => {
-            observer.error(error);
-            this.notificationService.showError(
-              'Restoran eklenirken bir hata oluştu'
-            );
+  createOrder(order: Order): Observable<void> {
+    const orderId = this.db.createPushId();
+    const orderWithId = { ...order, id: orderId };
+
+    return from(
+      Promise.all([
+        this.db.object(`orders/${orderId}`).set(orderWithId),
+        this.db
+          .object(`restaurant-orders/${order.restaurantId}/${orderId}`)
+          .set(orderWithId),
+        this.db
+          .object(`user-orders/${order.userId}/${orderId}`)
+          .set(orderWithId),
+      ]).then(() => void 0)
+    );
+  }
+
+  updateOrderStatus(
+    orderId: string,
+    status: Order['status']
+  ): Observable<void> {
+    return from(
+      Promise.all([
+        this.db.object(`orders/${orderId}`).update({ status }),
+        this.db.object(`restaurant-orders/${orderId}`).update({ status }),
+        this.db.object(`user-orders/${orderId}`).update({ status }),
+      ]).then(() => void 0)
+    );
+  }
+
+  deleteOrder(orderId: string): Observable<void> {
+    return from(
+      Promise.all([
+        this.db.object(`orders/${orderId}`).remove(),
+        this.db.object(`restaurant-orders/${orderId}`).remove(),
+        this.db.object(`user-orders/${orderId}`).remove(),
+      ]).then(() => void 0)
+    );
+  }
+
+  getMyRestaurant(): Observable<Restaurant | null> {
+    const restaurantId = localStorage.getItem('currentRestaurantId');
+    if (!restaurantId) return of(null);
+    return this.getRestaurantById(restaurantId);
+  }
+
+  // Menü güncelleme metodu
+  updateMenu(restaurantId: string, menu: MenuItem[]): Observable<void> {
+    return from(this.db.object(`restaurants/${restaurantId}/menu`).set(menu));
+  }
+
+  // Çalışan listesi getirme metodu
+  getEmployees(restaurantId: string): Observable<Employee[]> {
+    return this.db
+      .object<Restaurant>(`restaurants/${restaurantId}`)
+      .valueChanges()
+      .pipe(map((restaurant) => restaurant?.employees || []));
+  }
+
+  // Restoran sahibi girişi
+  loginRestaurantOwner(
+    email: string,
+    password: string
+  ): Promise<Restaurant | null> {
+    return this.db
+      .list<Restaurant>('restaurants', (ref) =>
+        ref.orderByChild('owner/email').equalTo(email)
+      )
+      .valueChanges()
+      .pipe(
+        take(1),
+        map((restaurants) => {
+          const restaurant = restaurants?.[0];
+          if (restaurant?.owner?.password === password) {
+            return restaurant;
           }
-        );
-      });
-    });
-  }
-
-  private generateNewId(restaurants: Restaurant[]): number {
-    return restaurants.length > 0
-      ? Math.max(...restaurants.map((r) => r.id)) + 1
-      : 1;
-  }
-
-  private saveToJson(restaurants: Restaurant[]): Observable<any> {
-    const data = { restaurants };
-    localStorage.setItem('restaurants', JSON.stringify(data));
-    return of(true).pipe(delay(500));
-  }
-
-  // Oturum açma/kapama işlemleri için
-  clearLocalStorage() {
-    localStorage.removeItem(this.RESTAURANTS_KEY);
-    // Silinen ID'leri KORUYORUZ
-  }
-
-  // Tam sıfırlama için (test amaçlı)
-  resetAllData() {
-    localStorage.removeItem(this.RESTAURANTS_KEY);
-    localStorage.removeItem(this.DELETED_IDS_KEY);
-    this.deletedRestaurantIds.clear();
-    this.initializeData();
-  }
-
-  // Yeni metod: Restoranları kalıcı olarak kaydet
-  private persistRestaurants(restaurants: Restaurant[]): void {
-    // localStorage'a kaydet
-    this.saveToStorage(restaurants);
-
-    // Kalıcı veri olarak JSON benzeri bir yapıda sakla
-    const permanentData = {
-      restaurants: restaurants,
-      lastUpdate: new Date().toISOString(),
-    };
-
-    localStorage.setItem('permanentRestaurants', JSON.stringify(permanentData));
-
-    // Silinen ID'leri güncelle
-    localStorage.setItem(
-      this.DELETED_IDS_KEY,
-      JSON.stringify(Array.from(this.deletedRestaurantIds))
-    );
+          return null;
+        })
+      )
+      .toPromise()
+      .then((result) => result || null);
   }
 }

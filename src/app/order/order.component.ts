@@ -1,149 +1,229 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import {
+  RestaurantService,
+  Restaurant,
+  MenuItem,
+  Order,
+} from '../services/restaurant.service';
 import { FormsModule } from '@angular/forms';
-import { BalanceService } from '../services/balance.service';
-import { OrderService } from '../services/order.service';
+import { AuthService } from '../services/auth.service';
+import { UserService } from '../services/user.service';
+import { NotificationService } from '../services/notification.service';
+import { firstValueFrom } from 'rxjs';
 
-interface MenuItem {
-  id: number;
-  category: string;
-  name: string;
-  description: string;
-  price: number;
-  portion: string;
-  quantity: number;
-}
-
-interface Restaurant {
-  id: number;
-  name: string;
-  category: string;
-  rating: number;
-  reviewCount: number;
-  address: string;
-  image: string;
-  isFavorite: boolean;
-  menu: MenuItem[];
-}
+// Status çevirilerini tanımlayalım
+const statusTranslations = {
+  pending: 'Beklemede',
+  preparing: 'Hazırlanıyor',
+  ready: 'Hazır',
+  delivered: 'Teslim Edildi',
+  cancelled: 'İptal Edildi',
+};
 
 @Component({
   selector: 'app-order',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './order.component.html',
   styleUrls: ['./order.component.css'],
-  standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
-  providers: [BalanceService, OrderService],
 })
 export class OrderComponent implements OnInit {
   restaurant: Restaurant | null = null;
   selectedItems: MenuItem[] = [];
-  orderSuccess = false;
-  totalAmount = 0;
+  totalAmount: number = 0;
   currentBalance: number = 0;
+  selectedCategory: string = 'Tümü';
   showBalanceError: boolean = false;
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router,
-    private balanceService: BalanceService,
-    private orderService: OrderService
+    public router: Router,
+    private restaurantService: RestaurantService,
+    private authService: AuthService,
+    private userService: UserService,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit() {
-    const restaurantId = Number(this.route.snapshot.params['id']);
+    this.loadRestaurant();
+    this.loadUserBalance();
+  }
 
-    // LocalStorage'dan restoran verilerini al
-    const savedRestaurant = localStorage.getItem('selectedRestaurant');
-    if (savedRestaurant) {
-      this.restaurant = JSON.parse(savedRestaurant);
+  private loadRestaurant() {
+    this.route.params.subscribe((params) => {
+      const restaurantId = params['id'];
+      if (restaurantId) {
+        const savedRestaurant = localStorage.getItem('selectedRestaurant');
+        if (savedRestaurant) {
+          this.restaurant = JSON.parse(savedRestaurant);
+        } else {
+          this.restaurantService.getRestaurantById(restaurantId).subscribe({
+            next: (restaurant) => {
+              this.restaurant = restaurant;
+            },
+            error: (error) => {
+              console.error('Restoran yüklenirken hata:', error);
+              this.notificationService.showError(
+                'Restoran bilgileri yüklenemedi'
+              );
+            },
+          });
+        }
+      }
+    });
+  }
 
-      // Veriler alındıktan sonra localStorage'ı temizle
-      localStorage.removeItem('selectedRestaurant');
+  private loadUserBalance() {
+    this.authService.user$.subscribe((user) => {
+      if (user) {
+        this.userService.getUserBalance(user.uid).subscribe((balance) => {
+          this.currentBalance = balance;
+        });
+      }
+    });
+  }
+
+  getUniqueCategories(): string[] {
+    if (!this.restaurant?.menu) return ['Tümü'];
+    const categories = this.restaurant.menu.map(
+      (item) => item.category || 'Diğer'
+    );
+    return ['Tümü', ...new Set(categories)];
+  }
+
+  selectCategory(category: string) {
+    this.selectedCategory = category;
+  }
+
+  getItemsByCategory(category: string): MenuItem[] {
+    if (!this.restaurant?.menu) return [];
+    if (category === 'Tümü') return this.restaurant.menu;
+    return this.restaurant.menu.filter(
+      (item) => (item.category || 'Diğer') === category
+    );
+  }
+
+  addToCart(item: MenuItem) {
+    const existingItem = this.selectedItems.find((i) => i.id === item.id);
+    if (existingItem) {
+      existingItem.quantity = (existingItem.quantity || 0) + 1;
+    } else {
+      this.selectedItems.push({ ...item, quantity: 1 });
     }
-
-    if (!this.restaurant) {
-      this.router.navigate(['/restaurant']);
-      return;
-    }
-
-    // Mevcut bakiyeyi al
-    const savedBalance = localStorage.getItem('userBalance');
-    if (savedBalance) {
-      this.currentBalance = Number(savedBalance);
-    }
+    this.calculateTotal();
+    this.notificationService.showSuccess('Ürün sepete eklendi');
   }
 
   updateQuantity(item: MenuItem, change: number) {
-    item.quantity = Math.max(0, (item.quantity || 0) + change);
+    const existingItem = this.selectedItems.find((i) => i.id === item.id);
+
+    if (existingItem) {
+      const newQuantity = (existingItem.quantity || 0) + change;
+      if (newQuantity <= 0) {
+        // Ürünü sepetten kaldır
+        this.selectedItems = this.selectedItems.filter((i) => i.id !== item.id);
+      } else {
+        existingItem.quantity = newQuantity;
+      }
+    } else if (change > 0) {
+      // Yeni ürün ekleniyor
+      this.selectedItems.push({ ...item, quantity: 1 });
+    }
+
     this.calculateTotal();
+    console.log('Güncel sepet:', this.selectedItems); // Debug için
   }
 
-  calculateTotal() {
-    this.totalAmount =
-      this.restaurant?.menu.reduce((total, item) => {
-        return total + item.price * (item.quantity || 0);
-      }, 0) || 0;
+  getItemQuantity(item: MenuItem): number {
+    const selectedItem = this.selectedItems.find((i) => i.id === item.id);
+    return selectedItem?.quantity || 0;
   }
 
-  completeOrder() {
-    const orderedItems = this.restaurant?.menu.filter(
-      (item) => item.quantity > 0
+  private calculateTotal() {
+    this.totalAmount = this.selectedItems.reduce(
+      (sum, item) => sum + item.price * (item.quantity || 0),
+      0
     );
-    if (orderedItems && orderedItems.length > 0) {
-      if (this.totalAmount > this.currentBalance) {
-        this.showBalanceError = true;
-        setTimeout(() => {
-          this.showBalanceError = false;
-        }, 3000);
+    console.log('Toplam tutar:', this.totalAmount); // Debug için
+  }
+
+  async completeOrder() {
+    if (!this.restaurant || !this.selectedItems.length) {
+      this.notificationService.showError('Lütfen en az bir ürün seçin');
+      return;
+    }
+
+    if (this.totalAmount > this.currentBalance) {
+      // Sadece butonu disable et, mesaj gösterme
+      return;
+    }
+
+    try {
+      const user = await firstValueFrom(this.authService.user$);
+      if (!user) {
+        this.notificationService.showError('Lütfen giriş yapın');
         return;
       }
 
-      const orderNumber = Date.now();
-      const newBalance = this.currentBalance - this.totalAmount;
-      this.balanceService.updateBalance(newBalance);
+      const timestamp = Date.now();
+      const randomNum = Math.floor(Math.random() * 1000)
+        .toString()
+        .padStart(3, '0');
+      const orderNumber = `SP${timestamp.toString().slice(-6)}${randomNum}`;
 
-      const currentUser = JSON.parse(
-        localStorage.getItem('currentUser') || '{}'
-      );
-      const newOrder = {
-        id: orderNumber,
-        userId: currentUser.id,
-        userName: currentUser.name,
-        restaurantId: this.restaurant?.id || 0,
-        restaurantName: this.restaurant?.name || '',
-        items: orderedItems.map((item, index) => ({
-          id: index + 1,
+      const order: Order = {
+        id: timestamp.toString(),
+        userId: user.uid,
+        userName: user.displayName || user.email || 'İsimsiz Kullanıcı',
+        restaurantId: this.restaurant.id,
+        restaurantName: this.restaurant.name,
+        items: this.selectedItems.map((item) => ({
+          id: item.id,
           name: item.name,
-          quantity: item.quantity,
           price: item.price,
+          quantity: item.quantity || 0,
+          category: item.category,
+          description: item.description,
+          portion: item.portion,
         })),
         totalAmount: this.totalAmount,
+        status: 'pending',
         orderDate: new Date().toISOString(),
-        status: 'Beklemede',
+        orderNumber: orderNumber,
       };
 
-      // OrderService üzerinden siparişi ekle
-      this.orderService.addOrder(newOrder);
+      // Önce siparişi kaydet
+      await firstValueFrom(this.restaurantService.createOrder(order));
 
-      // Siparişleri yenile
-      this.orderService.refreshOrders();
+      // Sonra bakiyeyi güncelle
+      await firstValueFrom(
+        this.userService.deductBalance(user.uid, this.totalAmount)
+      );
 
-      setTimeout(() => {
-        this.router.navigate(['/order-details']);
-      }, 100);
+      // Başarı mesajını göster
+      this.notificationService.showSuccess('Siparişiniz başarıyla alındı!');
+
+      // Yönlendirmeyi değiştirelim
+      this.router
+        .navigate(['/profile'], { replaceUrl: true })
+        .then(() => {
+          console.log('Profil sayfasına yönlendirildi');
+        })
+        .catch((error) => {
+          console.error('Yönlendirme hatası:', error);
+        });
+    } catch (error) {
+      console.error('Sipariş oluşturulurken hata:', error);
+      this.notificationService.showError('Sipariş oluşturulamadı');
     }
   }
 
-  // Benzersiz kategorileri al
-  getUniqueCategories(): string[] {
-    if (!this.restaurant?.menu) return [];
-    return [...new Set(this.restaurant.menu.map((item) => item.category))];
-  }
-
-  // Kategoriye göre ürünleri filtrele
-  getItemsByCategory(category: string): MenuItem[] {
-    if (!this.restaurant?.menu) return [];
-    return this.restaurant.menu.filter((item) => item.category === category);
+  // Status'u görüntülerken Türkçe çevirisini kullanabiliriz
+  getStatusTranslation(status: string): string {
+    return (
+      statusTranslations[status as keyof typeof statusTranslations] || status
+    );
   }
 }

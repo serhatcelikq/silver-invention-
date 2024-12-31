@@ -1,0 +1,39 @@
+<div class="admin-section">
+  <div class="categories-section">
+    <h3>Kategoriler</h3>
+    <div class="categories-list">
+      <div *ngFor="let category of categories" class="category-item">
+        <span>{{ category }}</span>
+        <div class="category-actions">
+          <button class="edit-btn" (click)="editCategory(category)">
+            <i class="fas fa-edit"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Kategori Düzenleme Modal -->
+<div class="modal" *ngIf="showModal" [class.show]="showModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h4>{{ editingCategory ? "Kategori Düzenle" : "Yeni Kategori" }}</h4>
+      <button class="close-btn" (click)="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Kategori Adı</label>
+        <input
+          type="text"
+          [(ngModel)]="newCategory"
+          placeholder="Kategori adı"
+        />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="cancel-btn" (click)="closeModal()">İptal</button>
+      <button class="save-btn" (click)="saveCategory()">Kaydet</button>
+    </div>
+  </div>
+</div>

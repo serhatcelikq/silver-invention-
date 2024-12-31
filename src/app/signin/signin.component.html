@@ -11,7 +11,7 @@
           name="email"
           placeholder="E-posta adresiniz"
           required
-          class="form-control"
+          class="txt"
         />
       </div>
 
@@ -22,24 +22,22 @@
           name="password"
           placeholder="Şifreniz"
           required
-          class="form-control"
+          class="txt"
         />
       </div>
 
-      <div *ngIf="errorMessage" class="error-message">
+      <div *ngIf="errorMessage" class="error-msg">
         {{ errorMessage }}
       </div>
 
-      <button type="submit" (click)="onSubmit()" class="auth-btn">
-        Giriş Yap
-      </button>
+      <button (click)="onSubmit()" class="signup-btn">Giriş Yap</button>
 
       <div class="auth-links">
         <a (click)="toggleForgotPassword()" class="forgot-password-link">
           Şifremi Unuttum
         </a>
         <a routerLink="/register" class="register-link">
-          Hesabınız yok mu? Kaydolun.
+          Hesabınız yok mu? Üye Olun
         </a>
       </div>
     </div>
@@ -53,7 +51,7 @@
           name="resetUsername"
           placeholder="Kullanıcı adınız"
           required
-          class="form-control"
+          class="txt"
         />
       </div>
 
@@ -64,12 +62,12 @@
           name="resetEmail"
           placeholder="E-posta adresiniz"
           required
-          class="form-control"
+          class="txt"
         />
       </div>
 
       <div *ngIf="!showNewPasswordInput">
-        <button (click)="searchUser()" class="auth-btn">Ara</button>
+        <button (click)="searchUser()" class="signup-btn">Kullanıcı Ara</button>
       </div>
 
       <div *ngIf="showNewPasswordInput" class="form-group">
@@ -79,9 +77,9 @@
           name="newPassword"
           placeholder="Yeni şifreniz"
           required
-          class="form-control"
+          class="txt"
         />
-        <button (click)="resetPassword()" class="auth-btn">
+        <button (click)="resetPassword()" class="signup-btn">
           Şifreyi Güncelle
         </button>
       </div>

@@ -143,23 +143,23 @@ export class ForgotPasswordComponent {
     return Boolean(this.username && this.email && this.newPassword);
   }
 
-  resetPassword(): void {
+  async resetPassword() {
     if (this.isFormValid) {
-      this.authService
-        .resetPassword(this.username, this.email, this.newPassword)
-        .subscribe({
-          next: () => {
-            this.message = 'Şifreniz başarıyla güncellendi!';
-            this.isError = false;
-            setTimeout(() => {
-              this.router.navigate(['/signin']);
-            }, 2000);
-          },
-          error: (error: Error) => {
-            this.message = error.message || 'Bir hata oluştu!';
-            this.isError = true;
-          },
-        });
+      try {
+        await this.authService.resetPassword(
+          this.username,
+          this.email,
+          this.newPassword
+        );
+        this.message = 'Şifreniz başarıyla güncellendi!';
+        this.isError = false;
+        setTimeout(() => {
+          this.router.navigate(['/signin']);
+        }, 2000);
+      } catch (error: any) {
+        this.message = error.message || 'Bir hata oluştu!';
+        this.isError = true;
+      }
     }
   }
 }

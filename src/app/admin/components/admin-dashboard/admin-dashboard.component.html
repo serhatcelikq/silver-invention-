@@ -1,126 +1,98 @@
-<div class="dashboard-container">
+<div class="admin-dashboard">
   <div class="dashboard-header">
-    <h2>Restoran İstatistikleri</h2>
-    <p>Restoran ve Sipariş Yönetim Paneli</p>
+    <h2>Yönetim Paneli</h2>
   </div>
 
   <div class="stats-grid">
-    <!-- Restoran İstatistikleri -->
-    <div class="stat-card restaurants">
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-users"></i>
+      </div>
+      <div class="stat-info">
+        <h3>Toplam Kullanıcı</h3>
+        <p>{{ userCount }}</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
       <div class="stat-icon">
         <i class="fas fa-utensils"></i>
       </div>
       <div class="stat-info">
         <h3>Toplam Restoran</h3>
-        <p class="stat-number">{{ totalRestaurants }}</p>
-        <span class="stat-trend positive">
-          <i class="fas fa-store"></i> Aktif Restoranlar
-        </span>
+        <p>{{ restaurantCount }}</p>
       </div>
     </div>
 
-    <!-- Kategori İstatistikleri -->
-    <div class="stat-card categories">
-      <div class="stat-icon">
-        <i class="fas fa-tags"></i>
-      </div>
-      <div class="stat-info">
-        <h3>Toplam Kategori</h3>
-        <p class="stat-number">{{ totalCategories }}</p>
-        <span class="stat-trend positive">
-          <i class="fas fa-list"></i> Farklı Mutfak Türü
-        </span>
-      </div>
-    </div>
-
-    <!-- Aktif Sipariş İstatistikleri -->
-    <div class="stat-card orders">
+    <div class="stat-card">
       <div class="stat-icon">
         <i class="fas fa-shopping-cart"></i>
       </div>
       <div class="stat-info">
-        <h3>Aktif Siparişler</h3>
-        <p class="stat-number">{{ activeOrders }}</p>
-        <span class="stat-trend positive">
-          <i class="fas fa-clock"></i> Devam Eden
-        </span>
+        <h3>Toplam Sipariş</h3>
+        <p>{{ orderCount }}</p>
       </div>
     </div>
 
-    <!-- Gelir İstatistikleri -->
-    <div class="stat-card revenue">
+    <div class="stat-card">
       <div class="stat-icon">
-        <i class="fas fa-coins"></i>
+        <i class="fas fa-money-bill-wave"></i>
       </div>
       <div class="stat-info">
-        <h3>Toplam Ciro</h3>
-        <p class="stat-number">{{ totalRevenue }} ₺</p>
-        <span class="stat-trend positive">
-          <i class="fas fa-chart-line"></i> Tüm Zamanlar
-        </span>
+        <h3>Toplam Kazanç</h3>
+        <p>{{ totalRevenue | currency : "TRY" : "symbol-narrow" : "1.2-2" }}</p>
       </div>
     </div>
   </div>
 
-  <!-- Grafik Bölümü -->
-  <div class="charts-section">
+  <div class="charts-grid">
     <div class="chart-card">
-      <h3>Aylık Sipariş Trendi</h3>
-      <div class="chart-container">
-        <div class="placeholder-chart">
-          <div
-            class="bar"
-            *ngFor="let value of monthlyOrders"
-            [style.height]="value + '%'"
-          >
-            <span class="bar-value">{{ value.toFixed(0) }}%</span>
-          </div>
-        </div>
-        <div class="chart-labels">
-          <span
-            *ngFor="
-              let month of [
-                'Oca',
-                'Şub',
-                'Mar',
-                'Nis',
-                'May',
-                'Haz',
-                'Tem',
-                'Ağu',
-                'Eyl',
-                'Eki',
-                'Kas',
-                'Ara'
-              ]
-            "
-          >
-            {{ month }}
-          </span>
-        </div>
-      </div>
+      <h3>Aylık Sipariş İstatistikleri</h3>
+      <canvas #orderChart></canvas>
     </div>
 
     <div class="chart-card">
-      <h3>En Popüler Restoranlar</h3>
-      <div class="popular-restaurants">
-        <div
-          class="restaurant-item"
-          *ngFor="let restaurant of popularRestaurants; let i = index"
-        >
-          <span class="restaurant-rank">#{{ i + 1 }}</span>
-          <span class="restaurant-name">{{ restaurant.name }}</span>
-          <div class="progress-bar">
-            <div
-              class="progress"
-              [style.width]="restaurant.popularity + '%'"
-            ></div>
-          </div>
-          <span class="percentage"
-            >{{ restaurant.popularity.toFixed(1) }}%</span
-          >
-        </div>
-      </div>
+      <h3>Gelir Analizi</h3>
+      <canvas #revenueChart></canvas>
+    </div>
+  </div>
+
+  <div class="recent-orders">
+    <h3>Son Siparişler</h3>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Sipariş No</th>
+            <th>Müşteri</th>
+            <th>Restoran</th>
+            <th>Tutar</th>
+            <th>Durum</th>
+            <th>Tarih</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let order of recentOrders">
+            <td>{{ order.orderNumber }}</td>
+            <td>{{ order.userName }}</td>
+            <td>{{ order.restaurantName }}</td>
+            <td>
+              {{
+                order.totalAmount | currency : "TRY" : "symbol-narrow" : "1.2-2"
+              }}
+            </td>
+            <td>
+              <span
+                class="status-badge"
+                [class]="'status-' + order.status.toLowerCase()"
+              >
+                {{ order.status }}
+              </span>
+            </td>
+            <td>{{ order.orderDate | date : "dd/MM/yyyy HH:mm" }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>

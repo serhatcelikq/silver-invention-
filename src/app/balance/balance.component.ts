@@ -9,7 +9,7 @@ import { BalanceService } from '../services/balance.service';
   templateUrl: './balance.component.html',
   styleUrls: ['./balance.component.css'],
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule]
+  imports: [CommonModule, FormsModule, RouterModule],
 })
 export class BalanceComponent implements OnInit {
   currentBalance: number = 0;
@@ -20,7 +20,7 @@ export class BalanceComponent implements OnInit {
   constructor(private balanceService: BalanceService) {}
 
   ngOnInit() {
-    this.balanceService.balance$.subscribe(balance => {
+    this.balanceService.balance$.subscribe((balance) => {
       this.currentBalance = balance;
     });
   }
@@ -32,13 +32,13 @@ export class BalanceComponent implements OnInit {
     }
 
     if (this.depositAmount > 5000) {
-      this.errorMessage = 'Maksimum yükleme tutarı 5000 TL\'dir';
+      this.errorMessage = "Maksimum yükleme tutarı 5000 TL'dir";
       return;
     }
 
     const newBalance = this.currentBalance + this.depositAmount;
     this.balanceService.updateBalance(newBalance);
-    
+
     this.showSuccess = true;
     this.errorMessage = '';
     this.depositAmount = 0;
@@ -47,4 +47,4 @@ export class BalanceComponent implements OnInit {
       this.showSuccess = false;
     }, 3000);
   }
-} 
+}

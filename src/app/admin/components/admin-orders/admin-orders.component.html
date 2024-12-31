@@ -95,12 +95,12 @@
           <td>{{ order.totalAmount }} ₺</td>
           <td>{{ order.orderDate | date : "dd/MM/yyyy HH:mm" }}</td>
           <td>
-            <select [(ngModel)]="order.status" (change)="updateStatus(order)">
-              <option value="Beklemede">Beklemede</option>
-              <option value="Hazırlanıyor">Hazırlanıyor</option>
-              <option value="Yolda">Yolda</option>
-              <option value="Tamamlandı">Tamamlandı</option>
-            </select>
+            <span
+              class="status-badge"
+              [class]="'status-' + order.status.toLowerCase()"
+            >
+              {{ order.status }}
+            </span>
           </td>
           <td>
             <button class="view-btn" (click)="viewOrderDetails(order)">
@@ -170,8 +170,10 @@
           <div class="items-list">
             <div class="item" *ngFor="let item of selectedOrder.items">
               <span class="item-name">{{ item.name }}</span>
-              <span class="item-quantity">x{{ item.quantity }}</span>
-              <span class="item-price">{{ item.price }} ₺</span>
+              <span class="item-quantity">x{{ item.quantity || 0 }}</span>
+              <span class="item-price"
+                >₺{{ item.price * (item.quantity || 0) }}</span
+              >
             </div>
           </div>
           <div class="total-amount">

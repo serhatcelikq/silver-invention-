@@ -3,21 +3,12 @@
   max-width: 1200px;
   margin: 80px auto 0;
   background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
-  min-height: 100vh;
+  min-height: calc(100vh - 80px);
   border-radius: 20px;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
 }
 
-.restaurant-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  padding: 1rem;
-  max-width: 1000px;
-  margin: 0 auto;
-}
-
-h2 {
+.page-title {
   color: #1a237e;
   font-size: 2.5rem;
   margin-bottom: 2rem;
@@ -25,122 +16,68 @@ h2 {
   background: linear-gradient(45deg, #667eea, #764ba2);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  position: relative;
+  padding-bottom: 1rem;
 }
 
-.restaurant-card {
-  width: 100%;
+.page-title::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 4px;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  border-radius: 2px;
+}
+
+/* Favori restoran listesi - Dikey düzen */
+.restaurant-list {
   display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Restoran kartı - Restoranlar sayfasıyla aynı stil */
+.restaurant-card {
   background: rgba(255, 255, 255, 0.98);
   border-radius: 15px;
   overflow: hidden;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   position: relative;
-  min-height: 250px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(10px);
-}
-
-.restaurant-card img {
-  width: 400px;
-  height: 250px;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.restaurant-info {
-  flex: 1;
-  padding: 2rem;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  height: 400px;
 }
 
-.restaurant-info h3 {
-  color: #1a237e;
-  font-size: 1.5rem;
-  margin-bottom: 0.5rem;
+.restaurant-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 1);
 }
 
-.cuisine {
-  color: #666;
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
+.restaurant-image {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
 }
 
-.rating {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.stars {
-  color: #ffd700;
-}
-
-.review-count {
-  color: #666;
-  font-size: 0.8rem;
-}
-
-.address {
-  color: #444;
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
-}
-
-.order-btn {
+.restaurant-image img {
   width: 100%;
-  padding: 0.8rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
 }
 
-.order-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-}
-
-.no-favorites {
-  text-align: center;
-  padding: 4rem 2rem;
-  background: white;
-  border-radius: 15px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.no-favorites i {
-  font-size: 4rem;
-  color: #667eea;
-  margin-bottom: 1rem;
-}
-
-.no-favorites p {
-  font-size: 1.2rem;
-  color: #666;
-  margin-bottom: 2rem;
-}
-
-.browse-btn {
-  display: inline-block;
-  padding: 1rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  text-decoration: none;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  border: none;
-  cursor: pointer;
-}
-
-.browse-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+.restaurant-card:hover .restaurant-image img {
+  transform: scale(1.05);
 }
 
 .favorite-icon {
@@ -158,9 +95,9 @@ h2 {
 }
 
 .favorite-icon i {
+  color: #ffd700;
   font-size: 1.2rem;
   transition: all 0.3s ease;
-  color: #ffd700;
 }
 
 .favorite-icon:hover {
@@ -168,55 +105,186 @@ h2 {
   box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
 }
 
-.restaurant-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  background: rgba(255, 255, 255, 1);
+.restaurant-info {
+  padding: 1.5rem;
+  background: white;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
-.favorite-notification {
-  position: fixed;
-  top: 100px;
-  right: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 1rem 2rem;
-  border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+.restaurant-name {
+  font-size: 1.4rem;
+  color: #1a237e;
+  margin-bottom: 0.8rem;
+  font-weight: 600;
+}
+
+.restaurant-category {
+  color: #666;
+  font-size: 0.95rem;
+  margin-bottom: 0.8rem;
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  transform: translateX(120%);
-  opacity: 0;
-  transition: all 0.3s ease;
-  z-index: 1000;
+  gap: 0.5rem;
 }
 
-.favorite-notification.show {
-  transform: translateX(0);
-  opacity: 1;
+.restaurant-category i {
+  color: #667eea;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.stars {
+  color: #ffd700;
+  display: flex;
+  gap: 0.2rem;
+}
+
+.review-count {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.restaurant-address {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 1.2rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  line-height: 1.4;
+}
+
+.restaurant-address i {
+  color: #667eea;
+  margin-top: 0.2rem;
+}
+
+.order-btn {
+  width: 100%;
+  padding: 0.8rem;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.order-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.order-btn i {
+  font-size: 1.1rem;
+}
+
+/* Boş durum tasarımı */
+.no-favorites {
+  text-align: center;
+  padding: 4rem;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: 2rem auto;
+}
+
+.no-favorites i {
+  font-size: 5rem;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 2rem;
+  display: block;
+}
+
+.no-favorites p {
+  font-size: 1.5rem;
+  color: #1a237e;
+  margin-bottom: 2rem;
+  line-height: 1.4;
+}
+
+.browse-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem 2.5rem;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.browse-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.browse-btn i {
+  font-size: 1.2rem;
 }
 
 @media (max-width: 768px) {
   .favorites-container {
     padding: 1rem;
+    margin-top: 60px;
+    border-radius: 0;
   }
 
-  h2 {
+  .page-title {
     font-size: 2rem;
+    margin-bottom: 1.5rem;
   }
 
   .restaurant-card {
-    flex-direction: column;
-    min-height: auto;
+    height: auto;
   }
 
-  .restaurant-card img {
-    width: 100%;
+  .restaurant-image {
     height: 200px;
   }
 
   .restaurant-info {
-    padding: 1.5rem;
+    padding: 1.2rem;
+  }
+
+  .no-favorites {
+    padding: 2rem 1rem;
+    margin: 1rem;
+  }
+
+  .no-favorites i {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .no-favorites p {
+    font-size: 1.3rem;
+  }
+
+  .browse-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 1rem;
   }
 }

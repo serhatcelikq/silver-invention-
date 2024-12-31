@@ -16,7 +16,9 @@ export class IndexComponent implements OnInit {
   isLoggedIn: boolean = false;
 
   constructor(private router: Router, private authService: AuthService) {
-    this.isLoggedIn = this.authService.isLoggedIn();
+    this.authService.user$.subscribe((user) => {
+      this.isLoggedIn = !!user;
+    });
   }
 
   ngOnInit() {

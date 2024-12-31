@@ -1,4 +1,4 @@
-<header class="header">
+<header class="header" *ngIf="showHeader$ | async">
   <nav class="navbar">
     <ng-container *ngIf="!isLoggedIn">
       <a
@@ -7,6 +7,12 @@
         [routerLinkActiveOptions]="{ exact: true }"
         >Ana Sayfa</a
       >
+      <a routerLink="/signin" routerLinkActive="active">Giriş</a>
+      <a routerLink="/register" routerLinkActive="active">Üye Ol</a>
+      <a routerLink="/restaurant-login" routerLinkActive="active">
+        <i class="fas fa-store"></i>
+        Business
+      </a>
     </ng-container>
 
     <ng-container *ngIf="isLoggedIn">
@@ -34,8 +40,8 @@
           <i class="fas fa-utensils"></i>
           Restoranlar
         </a>
-        <a routerLink="/favorite" routerLinkActive="active">
-          <i class="fas fa-heart"></i>
+        <a routerLink="/favorites" routerLinkActive="active">
+          <i class="fas fa-star"></i>
           Favorilerim
         </a>
       </ng-container>
@@ -45,16 +51,11 @@
           <i class="fas fa-user"></i>
           {{ userName }}
         </a>
-        <a href="javascript:void(0)" (click)="onLogout()" class="logout-link">
+        <a href="javascript:void(0)" (click)="logout()" class="logout-link">
           <i class="fas fa-sign-out-alt"></i>
           Çıkış
         </a>
       </div>
-    </ng-container>
-
-    <ng-container *ngIf="!isLoggedIn">
-      <a routerLink="/signin" routerLinkActive="active">Giriş</a>
-      <a routerLink="/register" routerLinkActive="active">Üye Ol</a>
     </ng-container>
   </nav>
 </header>

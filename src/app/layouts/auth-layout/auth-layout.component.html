@@ -1,0 +1,18 @@
+<header class="header">
+  <a routerLink="/" class="logo">
+    <i class="fas fa-utensils"></i>
+    FoodOrder
+  </a>
+  <nav class="nav-links">
+    <a routerLink="/" class="nav-link">Ana Sayfa</a>
+    <a routerLink="/restaurants" class="nav-link">Restoranlar</a>
+    <div class="auth-buttons">
+      <button routerLink="/login" class="login-btn">Giriş Yap</button>
+      <button routerLink="/register" class="register-btn">Kayıt Ol</button>
+    </div>
+  </nav>
+</header>
+
+<main class="content">
+  <router-outlet></router-outlet>
+</main>

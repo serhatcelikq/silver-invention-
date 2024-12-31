@@ -3,16 +3,21 @@ export interface OrderItem {
   name: string;
   quantity: number;
   price: number;
+  category?: string;
+  description?: string;
+  portion?: string;
 }
 
 export interface Order {
-  id: number;
+  id: string;
+  firebaseKey?: string;
   restaurantId: number;
   restaurantName: string;
-  userId: number;
+  userId: string;
   userName: string;
   status: string;
   totalAmount: number;
   orderDate: string;
   items: OrderItem[];
+  orderNumber: string;
 }

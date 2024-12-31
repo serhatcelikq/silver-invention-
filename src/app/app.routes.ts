@@ -7,17 +7,18 @@ import { RestaurantComponent } from './restaurant/restaurant.component';
 import { FavoriteRestaurantsComponent } from './favorite-restaurants/favorite-restaurants.component';
 import { OrderComponent } from './order/order.component';
 import { BalanceComponent } from './balance/balance.component';
-import { authGuard } from './guards/auth.guard';
-import { AdminComponent } from './admin/admin.component';
-import { adminGuard } from './guards/admin.guard';
+import { AuthGuard } from './guards/auth.guard';
+import { AdminGuard } from './guards/admin.guard';
 import { AdminDashboardComponent } from './admin/components/admin-dashboard/admin-dashboard.component';
 import { AdminRestaurantsComponent } from './admin/components/admin-restaurants/admin-restaurants.component';
-import { AdminUsersComponent } from './admin/components/admin-users/admin-users.component';
-import { AdminCategoriesComponent } from './admin/components/admin-categories/admin-categories.component';
 import { AdminOrdersComponent } from './admin/components/admin-orders/admin-orders.component';
 import { OrderDetailsComponent } from './order/order-details.component';
 import { UsersComponent } from './users/users.component';
 import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
+import { FavoritesComponent } from './favorites/favorites.component';
+import { RestaurantAuthGuard } from './guards/restaurant-auth.guard';
+import { RestaurantPanelComponent } from './restaurant-panel/restaurant-panel.component';
+import { DashboardComponent } from './restaurant-panel/dashboard/dashboard.component';
 
 export const routes: Routes = [
   {
@@ -41,7 +42,7 @@ export const routes: Routes = [
       import('./restaurant/restaurant.component').then(
         (m) => m.RestaurantComponent
       ),
-    canActivate: [authGuard],
+    canActivate: [AuthGuard],
   },
   {
     path: 'favorite',
@@ -49,49 +50,67 @@ export const routes: Routes = [
       import('./favorite-restaurants/favorite-restaurants.component').then(
         (m) => m.FavoriteRestaurantsComponent
       ),
-    canActivate: [authGuard],
+    canActivate: [AuthGuard],
   },
   {
     path: 'order/:id',
     loadComponent: () =>
       import('./order/order.component').then((m) => m.OrderComponent),
-    canActivate: [authGuard],
+    canActivate: [AuthGuard],
   },
   {
     path: 'balance',
     loadComponent: () =>
       import('./balance/balance.component').then((m) => m.BalanceComponent),
-    canActivate: [authGuard],
+    canActivate: [AuthGuard],
   },
   {
     path: 'profile',
     loadComponent: () =>
       import('./profile/profile.component').then((m) => m.ProfileComponent),
-    canActivate: [authGuard],
+    canActivate: [AuthGuard],
   },
   {
     path: 'admin',
-    component: AdminComponent,
-    canActivate: [adminGuard],
+    loadComponent: () =>
+      import('./admin/admin.component').then((m) => m.AdminComponent),
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: AdminDashboardComponent },
-      { path: 'restaurants', component: AdminRestaurantsComponent },
-      { path: 'users', component: AdminUsersComponent },
-      { path: 'orders', component: AdminOrdersComponent },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import(
+            './admin/components/admin-dashboard/admin-dashboard.component'
+          ).then((m) => m.AdminDashboardComponent),
+      },
+      {
+        path: 'users',
+        loadComponent: () =>
+          import('./admin/components/admin-users/admin-users.component').then(
+            (m) => m.AdminUsersComponent
+          ),
+      },
+      {
+        path: 'restaurants',
+        loadComponent: () =>
+          import(
+            './admin/components/admin-restaurants/admin-restaurants.component'
+          ).then((m) => m.AdminRestaurantsComponent),
+      },
+      {
+        path: 'orders',
+        loadComponent: () =>
+          import('./admin/components/admin-orders/admin-orders.component').then(
+            (m) => m.AdminOrdersComponent
+          ),
+      },
     ],
   },
   {
     path: 'order-details',
     loadComponent: () =>
       import('./order/order-details.component').then((m) => m.default),
-    canActivate: [authGuard],
-  },
-  {
-    path: 'users',
-    loadComponent: () =>
-      import('./users/users.component').then((m) => m.UsersComponent),
-    canActivate: [authGuard],
+    canActivate: [AuthGuard],
   },
   {
     path: 'forgot-password',
@@ -100,10 +119,74 @@ export const routes: Routes = [
         (m) => m.ForgotPasswordComponent
       ),
   },
+  {
+    path: 'restaurant-login',
+    loadComponent: () =>
+      import('./restaurant-login/restaurant-login.component').then(
+        (m) => m.RestaurantLoginComponent
+      ),
+  },
+  {
+    path: 'restaurant-register',
+    loadComponent: () =>
+      import('./restaurant-register/restaurant-register.component').then(
+        (m) => m.RestaurantRegisterComponent
+      ),
+  },
+  {
+    path: 'restaurant-admin',
+    loadComponent: () =>
+      import('./restaurant-admin/restaurant-admin.component').then(
+        (m) => m.RestaurantAdminComponent
+      ),
+  },
+  {
+    path: 'favorites',
+    loadComponent: () =>
+      import('./favorites/favorites.component').then(
+        (m) => m.FavoritesComponent
+      ),
+  },
+  {
+    path: 'restaurant-panel',
+    component: RestaurantPanelComponent,
+    children: [
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full',
+      },
+      {
+        path: 'dashboard',
+        component: DashboardComponent,
+      },
+      {
+        path: 'menu',
+        loadComponent: () =>
+          import('./restaurant-panel/menu/menu.component').then(
+            (m) => m.MenuComponent
+          ),
+      },
+      {
+        path: 'orders',
+        loadComponent: () =>
+          import('./restaurant-panel/orders/orders.component').then(
+            (m) => m.OrdersComponent
+          ),
+      },
+      {
+        path: 'employees',
+        loadComponent: () =>
+          import('./restaurant-panel/employees/employees.component').then(
+            (m) => m.EmployeesComponent
+          ),
+      },
+    ],
+  },
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)], // HttpClientModule burada olmamalı
+  imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule],
 })
 export class AppRoutingModule {}

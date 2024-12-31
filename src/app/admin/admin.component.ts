@@ -1,42 +1,51 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { OrderService } from '../services/order.service';
-import { RestaurantService } from '../services/restaurant.service';
+import { AuthService } from '../services/auth.service';
+import { LayoutService } from '../services/layout.service';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
   imports: [CommonModule, RouterModule],
-  template: `
-    <div class="admin-container">
-      <div class="admin-header">
-        <h2>Admin Paneli</h2>
-      </div>
-
-      <div class="admin-content">
-        <router-outlet></router-outlet>
-      </div>
-    </div>
-  `,
+  templateUrl: './admin.component.html',
+  styleUrls: ['./admin.component.css'],
 })
 export class AdminComponent implements OnInit {
+  activeSection: string = 'dashboard';
+
   constructor(
     private router: Router,
-    private orderService: OrderService,
-    private restaurantService: RestaurantService
+    private authService: AuthService,
+    private layoutService: LayoutService
   ) {}
 
   ngOnInit() {
-    // Sayfa yenilendiğinde dashboard'a yönlendir
-    if (this.router.url === '/admin') {
-      this.router.navigate(['/admin/dashboard']);
-    }
+    // Admin sayfasında header'ı gizle
+    this.layoutService.hideHeader();
+  }
 
-    // Periyodik güncelleme için interval başlat
-    setInterval(() => {
-      this.orderService.refreshOrders();
-      this.restaurantService.getRestaurants().subscribe();
-    }, 5000); // Her 5 saniyede bir güncelle
+  ngOnDestroy() {
+    // Component destroy olduğunda header'ı tekrar göster
+    this.layoutService.showHeader();
+  }
+
+  showSection(section: string) {
+    this.activeSection = section;
+    if (section === 'users') {
+      this.router.navigate(['/admin/users']);
+    } else if (section === 'dashboard') {
+      this.router.navigate(['/admin/dashboard']);
+    } else if (section === 'restaurants') {
+      this.router.navigate(['/admin/restaurants']);
+    } else if (section === 'orders') {
+      this.router.navigate(['/admin/orders']);
+    }
+  }
+
+  logout() {
+    this.authService.logout();
+    this.layoutService.showHeader(); // Çıkış yaparken header'ı göster
+    this.router.navigate(['/signin']);
   }
 }

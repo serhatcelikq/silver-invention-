@@ -1,59 +1,99 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../../services/auth.service';
+import { FormsModule } from '@angular/forms';
+import { UserService, User } from '../../../services/user.service';
+import { NotificationService } from '../../../services/notification.service';
+import { Subscription } from 'rxjs';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-admin-users',
+  templateUrl: './admin-users.component.html',
+  styleUrls: ['./admin-users.component.css'],
   standalone: true,
-  imports: [CommonModule],
-  template: `
-    <div class="section">
-      <h3>Kullanıcılar</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Ad</th>
-            <th>Email</th>
-            <th>Rol</th>
-            <th>İşlemler</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let user of users">
-            <td>{{ user.id }}</td>
-            <td>{{ user.name }}</td>
-            <td>{{ user.email }}</td>
-            <td>{{ user.role }}</td>
-            <td>
-              <button
-                class="delete-btn"
-                (click)="deleteUser(user.id)"
-                [disabled]="user.role === 'admin'"
-              >
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  `,
+  imports: [CommonModule, FormsModule],
 })
-export class AdminUsersComponent implements OnInit {
-  users: any[] = [];
+export class AdminUsersComponent implements OnInit, OnDestroy {
+  users: User[] = [];
+  selectedUser: User | null = null;
+  private usersSubscription?: Subscription;
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private userService: UserService,
+    private notificationService: NotificationService
+  ) {}
 
   ngOnInit() {
     this.loadUsers();
   }
 
-  loadUsers() {
-    this.users = this.authService.getUsers();
+  ngOnDestroy() {
+    if (this.usersSubscription) {
+      this.usersSubscription.unsubscribe();
+    }
   }
 
-  deleteUser(id: number) {
-    // Kullanıcı silme işlemi
+  loadUsers() {
+    this.usersSubscription = this.userService.getUsers().subscribe({
+      next: (users) => {
+        this.users = users;
+      },
+      error: (error) => {
+        console.error('Kullanıcılar yüklenirken hata:', error);
+        this.notificationService.showError('Kullanıcılar yüklenemedi');
+      },
+    });
+  }
+
+  editUser(user: User) {
+    this.selectedUser = { ...user };
+  }
+
+  async saveUser() {
+    if (!this.selectedUser) return;
+
+    try {
+      await this.userService
+        .updateUser(this.selectedUser.uid, {
+          name: this.selectedUser.name,
+          displayName: this.selectedUser.displayName,
+          email: this.selectedUser.email,
+          role: this.selectedUser.role,
+          isActive: this.selectedUser.isActive,
+        })
+        .toPromise();
+
+      this.notificationService.showSuccess('Kullanıcı başarıyla güncellendi');
+      this.closeModal();
+    } catch (error) {
+      console.error('Kullanıcı güncellenirken hata:', error);
+      this.notificationService.showError('Kullanıcı güncellenemedi');
+    }
+  }
+
+  async deleteUser(user: User) {
+    const result = await Swal.fire({
+      title: 'Emin misiniz?',
+      text: 'Bu kullanıcı kalıcı olarak silinecek!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Evet, Sil',
+      cancelButtonText: 'İptal',
+      confirmButtonColor: '#dc3545',
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await this.userService.deleteUser(user.uid).toPromise();
+        this.notificationService.showSuccess('Kullanıcı başarıyla silindi');
+      } catch (error) {
+        console.error('Kullanıcı silinirken hata:', error);
+        this.notificationService.showError('Kullanıcı silinemedi');
+      }
+    }
+  }
+
+  closeModal() {
+    this.selectedUser = null;
   }
 }

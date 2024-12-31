@@ -1,45 +1,57 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AuthService } from '../services/auth.service';
+import { AuthService, User } from '../services/auth.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-users',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './users.component.html',
-  styleUrls: ['./users.component.css'],
 })
 export class UsersComponent implements OnInit {
-  users: any[] = [];
-  selectedUser: any = null;
+  users: User[] = [];
+  selectedUser: User | null = null;
 
   constructor(private authService: AuthService) {}
 
-  ngOnInit() {
-    this.loadUsers();
+  async ngOnInit() {
+    await this.loadUsers();
   }
 
-  loadUsers() {
-    this.users = this.authService.getUsers();
-  }
-
-  editUser(user: any) {
-    this.selectedUser = { ...user };
-  }
-
-  deleteUser(user: any) {
-    if (confirm('Bu kullanıcıyı silmek istediğinizden emin misiniz?')) {
-      this.authService.deleteUser(user.id);
-      this.loadUsers();
+  async loadUsers() {
+    try {
+      this.users = await firstValueFrom(this.authService.getUsers());
+    } catch (error) {
+      console.error('Kullanıcılar yüklenirken hata:', error);
     }
   }
 
-  updateUser() {
+  editUser(user: User) {
+    this.selectedUser = { ...user };
+  }
+
+  async deleteUser(user: User) {
+    if (confirm('Bu kullanıcıyı silmek istediğinizden emin misiniz?')) {
+      try {
+        await this.authService.updateUser({ ...user, isActive: false });
+        await this.loadUsers();
+      } catch (error) {
+        console.error('Kullanıcı silinirken hata:', error);
+      }
+    }
+  }
+
+  async updateUser() {
     if (this.selectedUser) {
-      this.authService.updateUser(this.selectedUser);
-      this.loadUsers();
-      this.closeModal();
+      try {
+        await this.authService.updateUser(this.selectedUser);
+        await this.loadUsers();
+        this.closeModal();
+      } catch (error) {
+        console.error('Kullanıcı güncellenirken hata:', error);
+      }
     }
   }
 

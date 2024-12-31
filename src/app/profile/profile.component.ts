@@ -1,63 +1,107 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { AuthService } from '../services/auth.service';
-import { BalanceService } from '../services/balance.service';
-
-interface Order {
-  id: number;
-  restaurantName: string;
-  items: {
-    name: string;
-    quantity: number;
-    price: number;
-  }[];
-  totalAmount: number;
-  orderDate: Date;
-}
+import { OrderService, Order } from '../services/order.service';
+import { UserService } from '../services/user.service';
+import { NotificationService } from '../services/notification.service';
+import { firstValueFrom, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-profile',
+  standalone: true,
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css'],
-  standalone: true,
-  imports: [CommonModule, RouterModule],
 })
-export class ProfileComponent implements OnInit {
-  user: any = null;
+export class ProfileComponent implements OnInit, OnDestroy {
+  user: any;
   orders: Order[] = [];
   currentBalance: number = 0;
+  amountToAdd: number = 0;
+  maxAmount: number = 5000;
+  private balanceSubscription?: Subscription;
 
   constructor(
     private authService: AuthService,
-    private balanceService: BalanceService,
-    private router: Router
+    private orderService: OrderService,
+    private userService: UserService,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit() {
-    this.user = this.authService.currentUserValue;
-
-    this.balanceService.balance$.subscribe((balance) => {
-      this.currentBalance = balance;
+    this.authService.user$.subscribe((user) => {
+      this.user = user;
+      if (user) {
+        this.loadBalance();
+        this.loadOrders();
+      }
     });
+  }
 
-    const savedBalance = localStorage.getItem('userBalance');
-    if (savedBalance) {
-      this.currentBalance = Number(savedBalance);
+  async addBalance() {
+    if (!this.user?.uid) {
+      this.notificationService.showError('Kullanıcı bulunamadı');
+      return;
     }
 
+    if (this.amountToAdd <= 0) {
+      this.notificationService.showError('Geçerli bir miktar giriniz');
+      return;
+    }
+
+    if (this.amountToAdd > this.maxAmount) {
+      this.notificationService.showError(
+        `Maximum ${this.maxAmount}₺ yükleyebilirsiniz`
+      );
+      return;
+    }
+
+    try {
+      await firstValueFrom(
+        this.userService.addBalance(this.user.uid, this.amountToAdd)
+      );
+      this.notificationService.showSuccess(
+        `${this.amountToAdd}₺ bakiye yüklendi`
+      );
+      this.amountToAdd = 0;
+    } catch (error) {
+      console.error('Bakiye yüklenirken hata:', error);
+      this.notificationService.showError('Bakiye yüklenemedi');
+    }
+  }
+
+  private loadBalance() {
     if (this.user) {
-      const savedOrders = localStorage.getItem(`orders_${this.user.id}`);
-      if (savedOrders) {
-        this.orders = JSON.parse(savedOrders).map((order: any) => ({
-          ...order,
-          orderDate: new Date(order.orderDate),
-        }));
+      this.balanceSubscription = this.userService
+        .getUserBalance(this.user.uid)
+        .subscribe({
+          next: (balance) => {
+            this.currentBalance = balance;
+          },
+          error: (error) => {
+            console.error('Bakiye yüklenirken hata:', error);
+            this.notificationService.showError('Bakiye bilgisi alınamadı');
+          },
+        });
+    }
+  }
+
+  private async loadOrders() {
+    if (this.user) {
+      try {
+        const orders = await firstValueFrom(this.orderService.getOrders());
+        this.orders = orders.filter((order) => order.userId === this.user.uid);
+      } catch (error) {
+        console.error('Siparişler yüklenirken hata:', error);
       }
     }
   }
 
-  navigateToBalance() {
-    this.router.navigate(['/balance']);
+  ngOnDestroy() {
+    if (this.balanceSubscription) {
+      this.balanceSubscription.unsubscribe();
+    }
   }
 }

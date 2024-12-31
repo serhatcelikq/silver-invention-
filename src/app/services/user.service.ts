@@ -1,167 +1,109 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { User } from './auth.service';
-import { OrderService } from './order.service';
+import { AngularFireDatabase } from '@angular/fire/compat/database';
+import { Observable, from, take } from 'rxjs';
+import { map } from 'rxjs/operators';
 
-export interface UserData {
-  id: number;
-  name: string;
+export interface User {
+  uid: string;
   email: string;
-  role: string;
-  lastLogin: string;
-  registrationDate: string;
-  favorites: number[]; // Favori restoran ID'leri
-  orders: any[]; // Sipariş geçmişi
+  displayName?: string;
+  name?: string;
+  role?: string;
+  isActive?: boolean;
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class UserService {
-  private readonly USERS_KEY = 'registeredUsers';
-  private readonly USER_DATA_KEY = 'userData';
-  private usersSubject = new BehaviorSubject<UserData[]>([]);
-  users$ = this.usersSubject.asObservable();
+  constructor(private db: AngularFireDatabase) {}
 
-  constructor(private orderService: OrderService) {
-    this.loadUsers();
+  getUsers(): Observable<User[]> {
+    return this.db.list<User>('users').valueChanges();
   }
 
-  private loadUsers() {
-    const savedUsers = localStorage.getItem(this.USERS_KEY);
-    if (savedUsers) {
-      this.usersSubject.next(JSON.parse(savedUsers));
-    }
+  updateUser(uid: string, data: Partial<User>): Observable<void> {
+    return from(this.db.object(`users/${uid}`).update(data));
   }
 
-  saveUserData(user: User) {
-    const users = this.getUsers();
-    const existingUserIndex = users.findIndex((u) => u.email === user.email);
-
-    const userData: UserData = {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      lastLogin: new Date().toISOString(),
-      registrationDate: new Date().toISOString(),
-      favorites: [],
-      orders: [],
-    };
-
-    if (existingUserIndex === -1) {
-      // Yeni kullanıcı
-      users.push(userData);
-    } else {
-      // Mevcut kullanıcı
-      users[existingUserIndex] = {
-        ...users[existingUserIndex],
-        lastLogin: new Date().toISOString(),
-      };
-    }
-
-    this.saveUsers(users);
+  deleteUser(uid: string): Observable<void> {
+    return from(this.db.object(`users/${uid}`).remove());
   }
 
-  private saveUsers(users: UserData[]) {
-    localStorage.setItem(this.USERS_KEY, JSON.stringify(users));
-    this.usersSubject.next(users);
+  getUserBalance(userId: string): Observable<number> {
+    return this.db
+      .object<{ balance: number }>(`amountusers/${userId}`)
+      .valueChanges()
+      .pipe(map((data) => data?.balance || 0));
   }
 
-  getUsers(): UserData[] {
-    const savedUsers = localStorage.getItem(this.USERS_KEY);
-    return savedUsers ? JSON.parse(savedUsers) : [];
+  addBalance(userId: string, amount: number): Observable<void> {
+    return new Observable((subscriber) => {
+      // Önce mevcut bakiyeyi kontrol et
+      this.db
+        .object(`amountusers/${userId}`)
+        .valueChanges()
+        .pipe(take(1))
+        .subscribe({
+          next: (data: any) => {
+            // Mevcut bakiye veya 0
+            const currentBalance = data?.balance || 0;
+            // Yeni bakiyeyi hesapla
+            const newBalance = currentBalance + amount;
+
+            // Firebase'de güncelle
+            this.db
+              .object(`amountusers/${userId}`)
+              .update({
+                balance: newBalance,
+                lastUpdated: new Date().toISOString(),
+              })
+              .then(() => {
+                console.log('Bakiye başarıyla güncellendi:', newBalance);
+                subscriber.next();
+                subscriber.complete();
+              })
+              .catch((error) => {
+                console.error('Bakiye güncellenirken hata:', error);
+                subscriber.error(error);
+              });
+          },
+          error: (error) => {
+            console.error('Mevcut bakiye alınırken hata:', error);
+            subscriber.error(error);
+          },
+        });
+    });
   }
 
-  getUserByEmail(email: string): UserData | undefined {
-    return this.getUsers().find((u) => u.email === email);
-  }
+  removeBalance = this.deductBalance;
 
-  updateUserData(email: string, data: Partial<UserData>) {
-    const users = this.getUsers();
-    const userIndex = users.findIndex((u) => u.email === email);
+  deductBalance(userId: string, amount: number): Observable<void> {
+    return new Observable((subscriber) => {
+      this.getUserBalance(userId).subscribe(
+        (currentBalance) => {
+          if (currentBalance < amount) {
+            subscriber.error(new Error('Yetersiz bakiye'));
+            return;
+          }
 
-    if (userIndex !== -1) {
-      users[userIndex] = { ...users[userIndex], ...data };
-      this.saveUsers(users);
-      return true;
-    }
-    return false;
-  }
-
-  addFavoriteRestaurant(email: string, restaurantId: number) {
-    const users = this.getUsers();
-    const userIndex = users.findIndex((u) => u.email === email);
-
-    if (userIndex !== -1) {
-      if (!users[userIndex].favorites.includes(restaurantId)) {
-        users[userIndex].favorites.push(restaurantId);
-        this.saveUsers(users);
-      }
-    }
-  }
-
-  removeFavoriteRestaurant(email: string, restaurantId: number) {
-    const users = this.getUsers();
-    const userIndex = users.findIndex((u) => u.email === email);
-
-    if (userIndex !== -1) {
-      users[userIndex].favorites = users[userIndex].favorites.filter(
-        (id) => id !== restaurantId
+          const newBalance = currentBalance - amount;
+          this.db
+            .object(`amountusers/${userId}`)
+            .update({
+              balance: newBalance,
+              lastUpdated: new Date().toISOString(),
+            })
+            .then(() => {
+              subscriber.next();
+              subscriber.complete();
+            })
+            .catch((error) => {
+              subscriber.error(error);
+            });
+        },
+        (error) => subscriber.error(error)
       );
-      this.saveUsers(users);
-    }
-  }
-
-  addOrder(email: string, order: any) {
-    const users = this.getUsers();
-    const userIndex = users.findIndex((u) => u.email === email);
-
-    if (userIndex !== -1) {
-      if (!users[userIndex].orders) {
-        users[userIndex].orders = [];
-      }
-      users[userIndex].orders.push({
-        ...order,
-        orderDate: new Date().toISOString(),
-      });
-      this.saveUsers(users);
-    }
-  }
-
-  getUserOrders(email: string): any[] {
-    const user = this.getUserByEmail(email);
-    return user?.orders || [];
-  }
-
-  clearUserData() {
-    localStorage.removeItem(this.USERS_KEY);
-    this.usersSubject.next([]);
-  }
-
-  updateUser(userId: number, updatedUser: any) {
-    try {
-      const users = this.getUsers();
-      const userIndex = users.findIndex((u) => u.id === userId);
-
-      if (userIndex !== -1) {
-        const oldUser = users[userIndex];
-        users[userIndex] = { ...oldUser, ...updatedUser };
-
-        // LocalStorage'ı güncelle
-        localStorage.setItem('users', JSON.stringify(users));
-
-        // Eğer kullanıcı adı değiştiyse, siparişlerdeki kullanıcı adını da güncelle
-        if (oldUser.name !== updatedUser.name) {
-          this.orderService.updateOrdersUserName(userId, updatedUser.name);
-        }
-
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Kullanıcı güncelleme hatası:', error);
-      return false;
-    }
+    });
   }
 }

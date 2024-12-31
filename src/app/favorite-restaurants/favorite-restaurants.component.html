@@ -1,32 +1,54 @@
-<div class="favorite-container">
-    <h2>Favori Restoranlarım</h2>
-    
-    <!-- Favori restoran yoksa -->
-    <div *ngIf="favoriteRestaurants.length === 0" class="no-favorites">
-        <i class="fas fa-heart-broken"></i>
-        <p>Henüz favori restoranınız bulunmamaktadır.</p>
-        <a routerLink="/restaurant" class="browse-btn">Restoranları Keşfet</a>
-    </div>
+<div class="favorites-container">
+  <h2 class="page-title">Favori Restoranlarım</h2>
 
-    <!-- Favori restoranlar varsa -->
-    <div *ngIf="favoriteRestaurants.length > 0" class="restaurant-list">
-        <div class="restaurant-card" *ngFor="let restaurant of favoriteRestaurants">
-            <div class="favorite-icon" (click)="toggleFavorite(restaurant)">
-                <i class="fas fa-star" [class.favorite-active]="restaurant.isFavorite"></i>
-            </div>
-            <img [src]="restaurant.image" [alt]="restaurant.name">
-            <div class="restaurant-info">
-                <h3>{{restaurant.name}}</h3>
-                <p class="cuisine">{{restaurant.cuisine}}</p>
-                <div class="rating">
-                    <span class="stars">
-                        <i class="fas fa-star" *ngFor="let star of [1,2,3,4,5].slice(0,restaurant.rating)"></i>
-                    </span>
-                    <span class="review-count">({{restaurant.reviewCount}} değerlendirme)</span>
-                </div>
-                <p class="address">{{restaurant.address}}</p>
-                <button class="order-btn" [routerLink]="['/order', restaurant.id]">Sipariş Ver</button>
-            </div>
+  <div class="restaurant-list" *ngIf="favoriteRestaurants.length > 0">
+    <div class="restaurant-card" *ngFor="let restaurant of favoriteRestaurants">
+      <div class="restaurant-image">
+        <div class="favorite-icon" (click)="toggleFavorite(restaurant)">
+          <i class="fas fa-star"></i>
         </div>
+        <img
+          [src]="restaurant.url"
+          [alt]="restaurant.name"
+          onerror="this.src='https://via.placeholder.com/300x200?text=Restaurant'"
+        />
+      </div>
+
+      <div class="restaurant-info">
+        <h3 class="restaurant-name">{{ restaurant.name }}</h3>
+        <p class="restaurant-category">
+          <i class="fas fa-utensils"></i>
+          {{ restaurant.category }}
+        </p>
+        <div class="rating">
+          <div class="stars">
+            <i
+              class="fas fa-star"
+              *ngFor="let star of [1, 2, 3, 4, 5].slice(0, restaurant.rating)"
+            ></i>
+          </div>
+          <span class="review-count"
+            >({{ restaurant.reviews }} değerlendirme)</span
+          >
+        </div>
+        <p class="restaurant-address">
+          <i class="fas fa-map-marker-alt"></i>
+          {{ restaurant.address }}
+        </p>
+        <button class="order-btn" (click)="navigateToOrder(restaurant)">
+          <i class="fas fa-shopping-cart"></i>
+          Sipariş Ver
+        </button>
+      </div>
     </div>
-</div> 
+  </div>
+
+  <div class="no-favorites" *ngIf="favoriteRestaurants.length === 0">
+    <i class="fas fa-heart-broken"></i>
+    <p>Henüz favori restoranınız bulunmamaktadır.</p>
+    <button routerLink="/restaurant" class="browse-btn">
+      <i class="fas fa-search"></i>
+      Restoranları Keşfet
+    </button>
+  </div>
+</div>

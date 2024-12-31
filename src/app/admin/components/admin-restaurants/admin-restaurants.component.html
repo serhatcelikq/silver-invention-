@@ -1,0 +1,208 @@
+<div class="admin-section">
+  <div class="restaurants-header">
+    <h2>Restoranlar</h2>
+    <div class="header-actions">
+      <p>Sistemdeki tüm restoranları yönetin</p>
+      <button class="add-btn" (click)="showAddRestaurantModal()">
+        <i class="fas fa-plus"></i>
+        Yeni Restoran Ekle
+      </button>
+    </div>
+  </div>
+
+  <div class="restaurants-list">
+    <div *ngFor="let restaurant of restaurants" class="restaurant-card">
+      <div
+        class="restaurant-info"
+        *ngIf="editingRestaurant?.id !== restaurant.id"
+      >
+        <h3>{{ restaurant.name }}</h3>
+        <p><i class="fas fa-utensils"></i> {{ restaurant.category }}</p>
+        <p><i class="fas fa-map-marker-alt"></i> {{ restaurant.address }}</p>
+        <p><i class="fas fa-phone"></i> {{ restaurant.phone }}</p>
+        <div class="restaurant-actions">
+          <button class="edit-btn" (click)="editRestaurant(restaurant)">
+            <i class="fas fa-edit"></i>
+            Düzenle
+          </button>
+          <button class="delete-btn" (click)="confirmDelete(restaurant)">
+            <i class="fas fa-trash"></i>
+            Sil
+          </button>
+        </div>
+      </div>
+
+      <!-- Düzenleme Formu -->
+      <div class="edit-form" *ngIf="editingRestaurant?.id === restaurant.id">
+        <h3>Restoran Düzenle</h3>
+        <div class="form-group">
+          <label>Restoran Adı</label>
+          <input
+            type="text"
+            [ngModel]="editingRestaurant?.name"
+            (ngModelChange)="editingRestaurant!.name = $event"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label>Kategori</label>
+          <input
+            type="text"
+            [ngModel]="editingRestaurant?.category"
+            (ngModelChange)="editingRestaurant!.category = $event"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label>Adres</label>
+          <input
+            type="text"
+            [ngModel]="editingRestaurant?.address"
+            (ngModelChange)="editingRestaurant!.address = $event"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label>Telefon</label>
+          <input
+            type="text"
+            [ngModel]="editingRestaurant?.phone"
+            (ngModelChange)="editingRestaurant!.phone = $event"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label>Resim URL</label>
+          <input
+            type="text"
+            [ngModel]="editingRestaurant?.image"
+            (ngModelChange)="editingRestaurant!.image = $event"
+            required
+          />
+        </div>
+        <div class="form-actions">
+          <button class="save-btn" (click)="saveRestaurant()">
+            <i class="fas fa-save"></i>
+            Kaydet
+          </button>
+          <button class="cancel-btn" (click)="cancelEdit()">
+            <i class="fas fa-times"></i>
+            İptal
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Silme Onay Modalı -->
+  <div class="modal" *ngIf="showDeleteConfirm" [class.show]="showDeleteConfirm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Restoran Silme Onayı</h3>
+        <button class="close-btn" (click)="cancelDelete()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>
+          <strong>{{ restaurantToDelete?.name }}</strong> isimli restoranı
+          silmek istediğinizden emin misiniz?
+        </p>
+        <p class="warning">Bu işlem geri alınamaz!</p>
+      </div>
+      <div class="modal-footer">
+        <button class="delete-btn" (click)="deleteRestaurant()">
+          <i class="fas fa-trash"></i>
+          Evet, Sil
+        </button>
+        <button class="cancel-btn" (click)="cancelDelete()">
+          <i class="fas fa-times"></i>
+          İptal
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ekleme Modalı -->
+  <div class="modal" *ngIf="showAddModal" [class.show]="showAddModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Yeni Restoran Ekle</h3>
+        <button class="close-btn" (click)="cancelAdd()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Restoran Adı</label>
+          <input type="text" [(ngModel)]="newRestaurant.name" required />
+        </div>
+        <div class="form-group">
+          <label>Kategori</label>
+          <input type="text" [(ngModel)]="newRestaurant.category" required />
+        </div>
+        <div class="form-group">
+          <label>Adres</label>
+          <input type="text" [(ngModel)]="newRestaurant.address" required />
+        </div>
+        <div class="form-group">
+          <label>Telefon</label>
+          <input type="text" [(ngModel)]="newRestaurant.phone" required />
+        </div>
+        <div class="form-group">
+          <label>Resim URL</label>
+          <input type="text" [(ngModel)]="newRestaurant.image" required />
+        </div>
+
+        <!-- Restoran Sahibi Bilgileri -->
+        <h4>Restoran Sahibi Bilgileri</h4>
+        <div class="form-group">
+          <label>Ad Soyad</label>
+          <input
+            type="text"
+            [ngModel]="newRestaurant.owner?.name"
+            (ngModelChange)="newRestaurant.owner!.name = $event"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label>E-posta</label>
+          <input
+            type="email"
+            [ngModel]="newRestaurant.owner?.email"
+            (ngModelChange)="newRestaurant.owner!.email = $event"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label>Telefon</label>
+          <input
+            type="text"
+            [ngModel]="newRestaurant.owner?.phone"
+            (ngModelChange)="newRestaurant.owner!.phone = $event"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label>Şifre</label>
+          <input
+            type="password"
+            [ngModel]="newRestaurant.owner?.password"
+            (ngModelChange)="newRestaurant.owner!.password = $event"
+            required
+          />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="save-btn" (click)="addRestaurant()">
+          <i class="fas fa-plus"></i>
+          Restoran Ekle
+        </button>
+        <button class="cancel-btn" (click)="cancelAdd()">
+          <i class="fas fa-times"></i>
+          İptal
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

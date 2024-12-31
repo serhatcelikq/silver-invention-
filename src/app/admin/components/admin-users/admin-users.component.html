@@ -1,44 +1,111 @@
 <div class="admin-section">
-  <div class="users-section">
-    <h3>Kullanıcılar</h3>
-    <div class="search-box">
-      <input
-        type="text"
-        [(ngModel)]="searchTerm"
-        placeholder="Kullanıcı adı veya email ile ara..."
-      />
-    </div>
+  <div class="users-header">
+    <h2>Kullanıcı Yönetimi</h2>
+  </div>
+
+  <div class="users-table">
     <table>
       <thead>
         <tr>
-          <th>ID</th>
-          <th>Ad</th>
-          <th>Email</th>
+          <th>Ad Soyad</th>
+          <th>E-posta</th>
           <th>Rol</th>
+          <th>Durum</th>
           <th>İşlemler</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let user of filteredUsers">
-          <td>{{ user.id }}</td>
-          <td>{{ user.name }}</td>
+        <tr *ngFor="let user of users">
+          <td>{{ user.displayName }}</td>
           <td>{{ user.email }}</td>
-          <td>{{ user.role }}</td>
           <td>
-            <button class="view-orders-btn" (click)="viewUserOrders(user)">
-              <i class="fas fa-shopping-bag"></i>
-              Siparişleri Gör
+            <span class="role-badge" [class]="'role-' + user.role">
+              {{
+                user.role === "user"
+                  ? "Kullanıcı"
+                  : user.role === "admin"
+                  ? "Admin"
+                  : "Restoran"
+              }}
+            </span>
+          </td>
+          <td>
+            <span class="status-badge" [class.active]="user.isActive">
+              {{ user.isActive ? "Aktif" : "Pasif" }}
+            </span>
+          </td>
+          <td class="actions">
+            <button class="edit-btn" (click)="editUser(user)">
+              <i class="fas fa-edit"></i>
+              Düzenle
             </button>
-            <button
-              class="delete-btn"
-              (click)="deleteUser(user.id)"
-              [disabled]="user.role === 'admin'"
-            >
+            <button class="delete-btn" (click)="deleteUser(user)">
               <i class="fas fa-trash"></i>
+              Sil
             </button>
           </td>
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <!-- Düzenleme Modalı -->
+  <div class="modal" *ngIf="selectedUser" [class.show]="selectedUser">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Kullanıcı Düzenle</h3>
+        <button class="close-btn" (click)="closeModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Ad</label>
+          <input type="text" [(ngModel)]="selectedUser.name" />
+        </div>
+
+        <div class="form-group">
+          <label>Görünen Ad</label>
+          <input type="text" [(ngModel)]="selectedUser.displayName" />
+        </div>
+
+        <div class="form-group">
+          <label>E-posta</label>
+          <input type="email" [(ngModel)]="selectedUser.email" />
+        </div>
+
+        <div class="form-group">
+          <label>Rol</label>
+          <select [(ngModel)]="selectedUser.role">
+            <option value="user">Kullanıcı</option>
+            <option value="admin">Admin</option>
+            <option value="restaurant">Restoran</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Durum</label>
+          <div class="status-toggle">
+            <label class="switch">
+              <input type="checkbox" [(ngModel)]="selectedUser.isActive" />
+              <span class="slider round"></span>
+            </label>
+            <span>{{ selectedUser.isActive ? "Aktif" : "Pasif" }}</span>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="save-btn" (click)="saveUser()">
+            <i class="fas fa-save"></i>
+            Kaydet
+          </button>
+          <button class="cancel-btn" (click)="closeModal()">
+            <i class="fas fa-times"></i>
+            İptal
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

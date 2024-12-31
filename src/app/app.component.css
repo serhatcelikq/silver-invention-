@@ -570,3 +570,20 @@ a[routerLink="/balance"].active {
     border-radius: 0;
   }
 }
+
+.business-link {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.business-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.business-link i {
+  margin-right: 0.5rem;
+}

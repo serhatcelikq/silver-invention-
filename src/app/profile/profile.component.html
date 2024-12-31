@@ -8,21 +8,39 @@
       <!-- Bakiye Bölümü -->
       <div class="balance-section">
         <div class="balance-info">
-          <i class="fas fa-wallet"></i>
-          <div class="balance-details">
-            <span class="balance-label">Mevcut Bakiye</span>
-            <span class="balance-amount">{{ currentBalance }} ₺</span>
+          <div class="current-balance">
+            <h4>Mevcut Bakiyeniz</h4>
+            <p class="balance-amount">
+              {{ currentBalance | number : "1.0-2" }} ₺
+            </p>
+          </div>
+
+          <div class="balance-actions">
+            <input
+              type="number"
+              [(ngModel)]="amountToAdd"
+              placeholder="Miktar giriniz"
+              min="0"
+              [max]="maxAmount"
+              class="balance-input"
+            />
+            <button
+              (click)="addBalance()"
+              [disabled]="amountToAdd <= 0 || amountToAdd > maxAmount"
+              class="add-balance-btn"
+            >
+              <i class="fas fa-plus"></i>
+              Bakiye Yükle
+            </button>
+            <p class="max-amount-info">Maximum: {{ maxAmount }}₺</p>
           </div>
         </div>
-        <button class="add-balance-btn" (click)="navigateToBalance()">
-          <i class="fas fa-plus"></i>
-          Bakiye Yükle
-        </button>
       </div>
     </div>
   </div>
 
-  <div class="order-history">
+  <!-- Sipariş Geçmişi -->
+  <div class="orders-section">
     <h3>Sipariş Geçmişi</h3>
 
     <div *ngIf="orders.length === 0" class="no-orders">
@@ -41,8 +59,8 @@
 
         <div class="order-items">
           <div *ngFor="let item of order.items" class="order-item">
-            <span>{{ item.name }} x {{ item.quantity }}</span>
-            <span>{{ item.price * item.quantity }} ₺</span>
+            <span>{{ item.name }} x {{ item.quantity || 0 }}</span>
+            <span>₺{{ item.price * (item.quantity || 0) }}</span>
           </div>
         </div>
 

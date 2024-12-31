@@ -1,0 +1,97 @@
+<div class="admin-container">
+  <div class="sidebar">
+    <div class="logo">
+      <i class="fas fa-utensils"></i>
+      <span>Restoran Yönetimi</span>
+    </div>
+    <nav>
+      <a
+        (click)="showSection('stats')"
+        [class.active]="activeSection === 'stats'"
+      >
+        <i class="fas fa-chart-line"></i>
+        İstatistikler
+      </a>
+      <a
+        (click)="showSection('menu')"
+        [class.active]="activeSection === 'menu'"
+      >
+        <i class="fas fa-book-open"></i>
+        Menü Yönetimi
+      </a>
+      <a
+        (click)="showSection('orders')"
+        [class.active]="activeSection === 'orders'"
+      >
+        <i class="fas fa-clipboard-list"></i>
+        Siparişler
+      </a>
+      <a
+        (click)="showSection('settings')"
+        [class.active]="activeSection === 'settings'"
+      >
+        <i class="fas fa-cog"></i>
+        Ayarlar
+      </a>
+      <a (click)="logout()" class="logout-btn">
+        <i class="fas fa-sign-out-alt"></i>
+        Çıkış
+      </a>
+    </nav>
+  </div>
+
+  <div class="main-content">
+    <!-- İstatistikler -->
+    <div *ngIf="activeSection === 'stats'" class="stats-section">
+      <h2>Günlük İstatistikler</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <i class="fas fa-shopping-cart"></i>
+          <div class="stat-info">
+            <h3>Siparişler</h3>
+            <p>{{ dailyOrders }}</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <i class="fas fa-money-bill-wave"></i>
+          <div class="stat-info">
+            <h3>Gelir</h3>
+            <p>{{ dailyRevenue }} ₺</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Menü Yönetimi -->
+    <div *ngIf="activeSection === 'menu'" class="menu-section">
+      <h2>Menü Yönetimi</h2>
+      <button class="add-btn" (click)="showMenuModal = true">
+        <i class="fas fa-plus"></i>
+        Yeni Ürün Ekle
+      </button>
+
+      <div class="menu-items">
+        <div *ngFor="let item of restaurant?.menu" class="menu-item">
+          <div class="item-info">
+            <h3>{{ item.name }}</h3>
+            <p>{{ item.description }}</p>
+            <span class="price">{{ item.price }} ₺</span>
+          </div>
+          <div class="item-actions">
+            <button class="edit-btn" (click)="editMenuItem(item)">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="delete-btn" (click)="deleteMenuItem(item.id)">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Menü Öğesi Modal -->
+    <div class="modal" *ngIf="showMenuModal" [class.show]="showMenuModal">
+      <!-- Modal içeriği -->
+    </div>
+  </div>
+</div>

@@ -1,77 +1,121 @@
-<div class="order-container" *ngIf="!orderSuccess">
+<div class="order-container">
+  <!-- Restaurant Header -->
   <div class="restaurant-header">
-    <h2>{{ restaurant?.name }}</h2>
-    <p class="cuisine">{{ restaurant?.category }}</p>
-  </div>
-
-  <div class="menu-categories">
-    <div
-      class="category-section"
-      *ngFor="let category of getUniqueCategories()"
-    >
-      <h3>{{ category }}</h3>
-      <div class="menu-items">
-        <div
-          class="menu-item"
-          *ngFor="let item of getItemsByCategory(category)"
-        >
-          <div class="item-details">
-            <h4>{{ item.name }}</h4>
-            <p class="description">{{ item.description }}</p>
-            <p class="portion">{{ item.portion }}</p>
-            <p class="price">{{ item.price }} ₺</p>
-          </div>
-          <div class="quantity-control">
-            <button
-              (click)="updateQuantity(item, -1)"
-              [disabled]="!item.quantity"
-            >
-              -
-            </button>
-            <span>{{ item.quantity || 0 }}</span>
-            <button (click)="updateQuantity(item, 1)">+</button>
-          </div>
+    <div class="restaurant-banner">
+      <img [src]="restaurant?.image" [alt]="restaurant?.name" />
+      <div class="restaurant-overlay">
+        <h2>{{ restaurant?.name }}</h2>
+        <div class="restaurant-meta">
+          <span
+            ><i class="fas fa-utensils"></i> {{ restaurant?.category }}</span
+          >
+          <span><i class="fas fa-star"></i> {{ restaurant?.rating }}/5</span>
+          <span
+            ><i class="fas fa-map-marker-alt"></i>
+            {{ restaurant?.address }}</span
+          >
         </div>
       </div>
     </div>
   </div>
 
-  <div class="order-summary">
-    <p class="total">Toplam: {{ totalAmount }} ₺</p>
-    <button
-      class="complete-order-btn"
-      (click)="completeOrder()"
-      [disabled]="totalAmount === 0"
-    >
-      Siparişi Tamamla
-    </button>
-  </div>
-</div>
+  <!-- Menu Content -->
+  <div class="menu-content">
+    <!-- Category Navigation -->
+    <div class="category-nav">
+      <button
+        *ngFor="let category of getUniqueCategories()"
+        class="category-btn"
+        [class.active]="selectedCategory === category"
+        (click)="selectCategory(category)"
+      >
+        {{ category }}
+      </button>
+    </div>
 
-<!-- Sipariş Başarılı Mesajı -->
-<div *ngIf="orderSuccess" class="success-message">
-  <i class="fas fa-check-circle"></i>
-  <h2>Siparişiniz başarılı bir şekilde gerçekleşmiştir!</h2>
-
-  <div class="order-details">
-    <h3>Sipariş Detayı</h3>
-    <div class="ordered-items">
-      <div *ngFor="let item of selectedItems" class="ordered-item">
-        <span>{{ item.name }} x {{ item.quantity }}</span>
-        <span>{{ item.price * item.quantity }} ₺</span>
+    <!-- Menu Items -->
+    <div class="menu-items">
+      <div
+        *ngFor="let item of getItemsByCategory(selectedCategory)"
+        class="menu-item"
+      >
+        <div class="item-content">
+          <div class="item-info">
+            <h3>{{ item.name }}</h3>
+            <p>{{ item.description }}</p>
+            <span class="price">₺{{ item.price }}</span>
+          </div>
+          <div class="item-actions">
+            <button
+              class="quantity-btn"
+              (click)="updateQuantity(item, -1)"
+              [disabled]="getItemQuantity(item) === 0"
+            >
+              <i class="fas fa-minus"></i>
+            </button>
+            <span class="quantity">{{ getItemQuantity(item) }}</span>
+            <button class="quantity-btn" (click)="updateQuantity(item, 1)">
+              <i class="fas fa-plus"></i>
+            </button>
+          </div>
+        </div>
       </div>
-      <div class="total-line">
-        <strong>Toplam:</strong>
-        <strong>{{ totalAmount }} ₺</strong>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="order-summary" *ngIf="selectedItems.length > 0">
+      <div class="summary-content">
+        <h3>Sipariş Özeti</h3>
+        <div class="selected-items">
+          <div *ngFor="let item of selectedItems" class="selected-item">
+            <div class="item-details">
+              <span class="item-name">{{ item.name }}</span>
+              <span class="item-quantity">x {{ item.quantity }}</span>
+            </div>
+            <span class="item-price"
+              >₺{{ item.price * (item.quantity || 0) }}</span
+            >
+          </div>
+        </div>
+
+        <div class="balance-info">
+          <span>Mevcut Bakiye:</span>
+          <span class="balance">₺{{ currentBalance }}</span>
+        </div>
+
+        <div class="total-info">
+          <span>Toplam Tutar:</span>
+          <span class="total-amount">₺{{ totalAmount }}</span>
+        </div>
+
+        <button
+          class="complete-order-btn"
+          (click)="completeOrder()"
+          [disabled]="totalAmount > currentBalance"
+        >
+          <i class="fas fa-check-circle"></i>
+          Siparişi Tamamla
+        </button>
       </div>
     </div>
   </div>
 
-  <button class="return-btn" routerLink="/restaurant">Restoranlara Dön</button>
+  <!-- Error Message -->
+  <div class="error-popup" *ngIf="showBalanceError">
+    <div class="error-content">
+      <i class="fas fa-exclamation-circle"></i>
+      <h3>Yetersiz Bakiye</h3>
+      <p>Mevcut Bakiye: ₺{{ currentBalance }}</p>
+      <p>Sipariş Tutarı: ₺{{ totalAmount }}</p>
+      <p>Gereken Ek Bakiye: ₺{{ totalAmount - currentBalance }}</p>
+      <button routerLink="/profile" class="add-balance-btn">
+        <i class="fas fa-plus-circle"></i>
+        Bakiye Yükle
+      </button>
+    </div>
+  </div>
 </div>
 
-<!-- Bakiye Hatası -->
-<div class="balance-error" *ngIf="showBalanceError">
-  <i class="fas fa-exclamation-circle"></i>
-  <div class="error-message">Yetersiz bakiye! Lütfen bakiye yükleyiniz.</div>
+<div class="loading" *ngIf="!restaurant">
+  <p>Yükleniyor...</p>
 </div>

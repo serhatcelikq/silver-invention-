@@ -1,15 +1,26 @@
-import { inject } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { AdminService } from '../services/admin.service';
+import { AuthService } from '../services/auth.service';
+import { map, take } from 'rxjs/operators';
 
-export const adminGuard = () => {
-  const adminService = inject(AdminService);
-  const router = inject(Router);
+@Injectable({
+  providedIn: 'root'
+})
+export class AdminGuard {
+  constructor(private auth: AuthService, private router: Router) {}
 
-  if (adminService.isAdmin()) {
-    return true;
+  canActivate() {
+    return this.auth.user$.pipe(
+      take(1),
+      map(user => {
+        if (user?.role === 'admin') {
+          return true;
+        }
+        
+        // Admin değilse signin sayfasına yönlendir
+        this.router.navigate(['/signin']);
+        return false;
+      })
+    );
   }
-
-  router.navigate(['/']);
-  return false;
-};
+}
