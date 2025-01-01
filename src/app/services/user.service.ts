@@ -32,32 +32,85 @@ export class UserService {
 
   getUserBalance(userId: string): Observable<number> {
     return this.db
-      .object<{ balance: number }>(`amountusers/${userId}`)
+      .object<number>(`users/${userId}/balance`)
       .valueChanges()
-      .pipe(map((data) => data?.balance || 0));
+      .pipe(map((balance) => balance || 0));
   }
 
   addBalance(userId: string, amount: number): Observable<void> {
     return new Observable((subscriber) => {
-      // Önce mevcut bakiyeyi kontrol et
-      this.db
-        .object(`amountusers/${userId}`)
-        .valueChanges()
+      this.getUserBalance(userId)
         .pipe(take(1))
         .subscribe({
-          next: (data: any) => {
-            // Mevcut bakiye veya 0
-            const currentBalance = data?.balance || 0;
-            // Yeni bakiyeyi hesapla
+          next: (currentBalance) => {
             const newBalance = currentBalance + amount;
 
-            // Firebase'de güncelle
             this.db
-              .object(`amountusers/${userId}`)
-              .update({
-                balance: newBalance,
-                lastUpdated: new Date().toISOString(),
+              .object(`users/${userId}/balance`)
+              .set(newBalance)
+              .then(() => {
+                console.log('Bakiye eklendi. Yeni bakiye:', newBalance);
+                subscriber.next();
+                subscriber.complete();
               })
+              .catch((error) => {
+                console.error('Bakiye eklenirken hata:', error);
+                subscriber.error(error);
+              });
+          },
+          error: (error) => {
+            subscriber.error(error);
+          },
+        });
+    });
+  }
+
+  removeBalance = this.deductBalance;
+
+  deductBalance(userId: string, amount: number): Observable<void> {
+    return new Observable((subscriber) => {
+      this.getUserBalance(userId)
+        .pipe(take(1))
+        .subscribe({
+          next: (currentBalance) => {
+            if (currentBalance < amount) {
+              subscriber.error(new Error('Yetersiz bakiye'));
+              return;
+            }
+
+            const newBalance = currentBalance - amount;
+
+            this.db
+              .object(`users/${userId}/balance`)
+              .set(newBalance)
+              .then(() => {
+                console.log('Bakiye güncellendi. Yeni bakiye:', newBalance);
+                subscriber.next();
+                subscriber.complete();
+              })
+              .catch((error) => {
+                console.error('Bakiye düşülürken hata:', error);
+                subscriber.error(error);
+              });
+          },
+          error: (error) => {
+            subscriber.error(error);
+          },
+        });
+    });
+  }
+
+  updateUserBalance(userId: string, amount: number): Observable<void> {
+    return new Observable((subscriber) => {
+      this.getUserBalance(userId)
+        .pipe(take(1))
+        .subscribe({
+          next: (currentBalance) => {
+            const newBalance = amount;
+
+            this.db
+              .object(`users/${userId}/balance`)
+              .set(newBalance)
               .then(() => {
                 console.log('Bakiye başarıyla güncellendi:', newBalance);
                 subscriber.next();
@@ -69,41 +122,10 @@ export class UserService {
               });
           },
           error: (error) => {
-            console.error('Mevcut bakiye alınırken hata:', error);
+            console.error('Bakiye bilgisi alınırken hata:', error);
             subscriber.error(error);
           },
         });
-    });
-  }
-
-  removeBalance = this.deductBalance;
-
-  deductBalance(userId: string, amount: number): Observable<void> {
-    return new Observable((subscriber) => {
-      this.getUserBalance(userId).subscribe(
-        (currentBalance) => {
-          if (currentBalance < amount) {
-            subscriber.error(new Error('Yetersiz bakiye'));
-            return;
-          }
-
-          const newBalance = currentBalance - amount;
-          this.db
-            .object(`amountusers/${userId}`)
-            .update({
-              balance: newBalance,
-              lastUpdated: new Date().toISOString(),
-            })
-            .then(() => {
-              subscriber.next();
-              subscriber.complete();
-            })
-            .catch((error) => {
-              subscriber.error(error);
-            });
-        },
-        (error) => subscriber.error(error)
-      );
     });
   }
 }

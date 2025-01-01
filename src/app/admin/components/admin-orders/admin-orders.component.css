@@ -5,236 +5,218 @@
 }
 
 .orders-header {
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e9ecef;
 }
 
 .orders-header h2 {
-  font-size: 2.2rem;
+  font-size: 2.4rem;
   color: #2c3e50;
   margin-bottom: 0.5rem;
   font-weight: 600;
 }
 
-/* Arama Formu */
-.search-form {
-  background: white;
-  padding: 1.5rem;
+.orders-header p {
+  color: #6c757d;
+  font-size: 1.1rem;
+}
+
+.search-container {
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  padding: 1.5rem 2rem;
   border-radius: 16px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
   margin-bottom: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
-.search-form .form-group {
-  margin-bottom: 1rem;
+.search-box {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.search-form label {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: #2c3e50;
-  font-weight: 500;
-}
-
-.search-form input,
-.search-form select {
-  width: 100%;
-  padding: 0.8rem;
-  border: 2px solid #e9ecef;
-  border-radius: 8px;
+.input-group {
+  flex: 1;
+  max-width: 350px;
+  position: relative;
   transition: all 0.3s ease;
 }
 
-.search-form input:focus,
-.search-form select:focus {
-  border-color: #4caf50;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+.input-group i {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #4a90e2;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
 }
 
-/* Tablo Tasarımı */
+.input-group input {
+  width: 100%;
+  padding: 1rem 1rem 1rem 3rem;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  background: white;
+  color: #2c3e50;
+}
+
+.input-group input::placeholder {
+  color: #95a5a6;
+  font-weight: 400;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
+  background: white;
+}
+
+.input-group:hover input {
+  border-color: #4a90e2;
+}
+
+.input-group:hover i {
+  color: #2980b9;
+}
+
+.input-group input[type="date"] {
+  padding-left: 3.2rem;
+  cursor: pointer;
+}
+
 .orders-table {
   background: white;
-  border-radius: 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
 table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+th,
+td {
+  padding: 1.2rem 1.5rem;
+  text-align: left;
 }
 
 th {
   background: #f8f9fa;
-  padding: 1rem;
-  text-align: left;
-  color: #2c3e50;
   font-weight: 600;
-  border-bottom: 2px solid #e9ecef;
+  color: #2c3e50;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 td {
-  padding: 1rem;
-  border-bottom: 1px solid #e9ecef;
-  color: #6c757d;
+  border-bottom: 1px solid #f1f1f1;
+  color: #444;
 }
 
 tr:hover {
-  background: #f8f9fa;
+  background-color: #f8f9fa;
 }
 
-/* Durum Rozetleri */
-.status-badge {
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  display: inline-block;
-}
-
-.status-beklemede {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.status-hazirlaniyor {
-  background: #cce5ff;
-  color: #004085;
-}
-
-.status-yolda {
-  background: #d4edda;
-  color: #155724;
-}
-
-.status-tamamlandi {
-  background: #d1e7dd;
-  color: #0f5132;
-}
-
-/* Detay Butonu */
-.view-btn {
-  background: #6c757d;
-  color: white;
-  border: none;
-  padding: 0.6rem 1rem;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.view-btn:hover {
-  background: #5a6268;
-  transform: translateY(-2px);
-}
-
-/* Modal Tasarımı */
-.modal {
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(5px);
-}
-
-.modal-content {
-  background: white;
-  border-radius: 20px;
-  padding: 2rem;
-  max-width: 600px;
-  width: 90%;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.modal-header h3 {
-  font-size: 1.8rem;
-  color: #2c3e50;
-  margin: 0;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: #6c757d;
-  cursor: pointer;
-}
-
-/* Sipariş Detayları */
-.order-info {
-  margin-bottom: 2rem;
-}
-
-.info-group {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.info-group label {
-  color: #6c757d;
-  font-weight: 500;
-}
-
-.items-list {
-  background: #f8f9fa;
-  padding: 1rem;
-  border-radius: 12px;
-  margin: 1rem 0;
-}
-
-.item {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.item:last-child {
-  border-bottom: none;
-}
-
-.total-amount {
-  display: flex;
-  justify-content: space-between;
-  padding: 1rem 0;
-  margin-top: 1rem;
-  border-top: 2px solid #e9ecef;
+.order-number .number {
   font-weight: 600;
   color: #2c3e50;
 }
 
-/* Responsive Tasarım */
+.customer-info .name,
+.restaurant-info .name {
+  font-weight: 500;
+}
+
+.amount {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.date {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.actions {
+  text-align: center;
+}
+
+.delete-btn {
+  padding: 0.8rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #fff1f0;
+  color: #ff4d4f;
+}
+
+.delete-btn:hover {
+  background: #ffccc7;
+  transform: translateY(-2px);
+}
+
+.delete-btn i {
+  font-size: 1rem;
+}
+
+@media (max-width: 992px) {
+  .search-box {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .input-group {
+    flex: 1 1 calc(50% - 1rem);
+    max-width: none;
+  }
+}
+
 @media (max-width: 768px) {
   .admin-section {
     padding: 1rem;
   }
 
   .orders-header h2 {
-    font-size: 1.8rem;
+    font-size: 2rem;
   }
 
-  .search-form {
+  .search-container {
     padding: 1rem;
   }
 
-  table {
-    display: block;
+  .search-box {
+    flex-direction: column;
+  }
+
+  .input-group {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .orders-table {
     overflow-x: auto;
   }
 
-  td,
-  th {
-    min-width: 120px;
+  table {
+    min-width: 800px;
+  }
+
+  th,
+  td {
+    padding: 1rem;
   }
 }

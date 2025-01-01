@@ -12,6 +12,8 @@ import { AuthService } from '../services/auth.service';
 import { UserService } from '../services/user.service';
 import { NotificationService } from '../services/notification.service';
 import { firstValueFrom } from 'rxjs';
+import { take } from 'rxjs/operators';
+import { AngularFireDatabase } from '@angular/fire/compat/database';
 
 // Status çevirilerini tanımlayalım
 const statusTranslations = {
@@ -43,7 +45,8 @@ export class OrderComponent implements OnInit {
     private restaurantService: RestaurantService,
     private authService: AuthService,
     private userService: UserService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private db: AngularFireDatabase
   ) {}
 
   ngOnInit() {
@@ -150,74 +153,94 @@ export class OrderComponent implements OnInit {
   }
 
   async completeOrder() {
-    if (!this.restaurant || !this.selectedItems.length) {
-      this.notificationService.showError('Lütfen en az bir ürün seçin');
+    if (!this.selectedItems.length) {
+      this.notificationService.showError('Sepetiniz boş!');
       return;
     }
 
-    if (this.totalAmount > this.currentBalance) {
-      // Sadece butonu disable et, mesaj gösterme
+    if (!this.restaurant) {
+      this.notificationService.showError('Restoran bilgisi bulunamadı!');
       return;
     }
 
-    try {
-      const user = await firstValueFrom(this.authService.user$);
-      if (!user) {
-        this.notificationService.showError('Lütfen giriş yapın');
-        return;
-      }
-
-      const timestamp = Date.now();
-      const randomNum = Math.floor(Math.random() * 1000)
-        .toString()
-        .padStart(3, '0');
-      const orderNumber = `SP${timestamp.toString().slice(-6)}${randomNum}`;
-
-      const order: Order = {
-        id: timestamp.toString(),
-        userId: user.uid,
-        userName: user.displayName || user.email || 'İsimsiz Kullanıcı',
-        restaurantId: this.restaurant.id,
-        restaurantName: this.restaurant.name,
-        items: this.selectedItems.map((item) => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity || 0,
-          category: item.category,
-          description: item.description,
-          portion: item.portion,
-        })),
-        totalAmount: this.totalAmount,
-        status: 'pending',
-        orderDate: new Date().toISOString(),
-        orderNumber: orderNumber,
-      };
-
-      // Önce siparişi kaydet
-      await firstValueFrom(this.restaurantService.createOrder(order));
-
-      // Sonra bakiyeyi güncelle
-      await firstValueFrom(
-        this.userService.deductBalance(user.uid, this.totalAmount)
-      );
-
-      // Başarı mesajını göster
-      this.notificationService.showSuccess('Siparişiniz başarıyla alındı!');
-
-      // Yönlendirmeyi değiştirelim
-      this.router
-        .navigate(['/profile'], { replaceUrl: true })
-        .then(() => {
-          console.log('Profil sayfasına yönlendirildi');
-        })
-        .catch((error) => {
-          console.error('Yönlendirme hatası:', error);
-        });
-    } catch (error) {
-      console.error('Sipariş oluşturulurken hata:', error);
-      this.notificationService.showError('Sipariş oluşturulamadı');
+    const user = await firstValueFrom(this.authService.user$);
+    if (!user) {
+      this.notificationService.showError('Lütfen giriş yapın!');
+      return;
     }
+
+    // Toplam tutarı hesapla
+    this.calculateTotal();
+
+    // Bakiye kontrolü yap
+    this.userService
+      .getUserBalance(user.uid)
+      .pipe(take(1))
+      .subscribe({
+        next: (balance) => {
+          if (balance < this.totalAmount) {
+            this.notificationService.showError(
+              'Yetersiz bakiye! Lütfen bakiye yükleyin.'
+            );
+            return;
+          }
+
+          // Sipariş verilerini hazırla
+          const orderData: Order = {
+            id: this.db.createPushId(),
+            userId: user.uid,
+            userName: user.displayName || user.email || 'İsimsiz Kullanıcı',
+            restaurantId: this.restaurant!.id,
+            restaurantName: this.restaurant!.name,
+            items: this.selectedItems,
+            totalAmount: this.totalAmount,
+            status: 'pending',
+            orderDate: new Date().toISOString(),
+            orderNumber: this.generateOrderNumber(),
+          };
+
+          // Siparişi oluştur
+          this.restaurantService.createOrder(orderData).subscribe({
+            next: () => {
+              // Bakiyeyi düş
+              this.userService
+                .deductBalance(user.uid, this.totalAmount)
+                .subscribe({
+                  next: () => {
+                    this.notificationService.showSuccess(
+                      'Siparişiniz başarıyla oluşturuldu!'
+                    );
+                    this.selectedItems = []; // Sepeti temizle
+                    this.router.navigate(['/profile']);
+                  },
+                  error: (error) => {
+                    console.error('Bakiye düşme hatası:', error);
+                    this.notificationService.showError(
+                      'Bakiye düşme işlemi başarısız!'
+                    );
+                  },
+                });
+            },
+            error: (error) => {
+              console.error('Sipariş oluşturma hatası:', error);
+              this.notificationService.showError('Sipariş oluşturulamadı!');
+            },
+          });
+        },
+        error: (error) => {
+          console.error('Bakiye sorgulama hatası:', error);
+          this.notificationService.showError('Bakiye bilgisi alınamadı!');
+        },
+      });
+  }
+
+  // Sipariş numarası oluşturma yardımcı fonksiyonu
+  private generateOrderNumber(): string {
+    const timestamp = Date.now().toString();
+    const random = Math.floor(Math.random() * 1000)
+      .toString()
+      .padStart(3, '0');
+    return `SP${timestamp.slice(-6)}${random}`;
   }
 
   // Status'u görüntülerken Türkçe çevirisini kullanabiliriz

@@ -1,194 +1,80 @@
 <div class="admin-section">
   <div class="orders-header">
     <h2>Siparişler</h2>
-    <p>Arama kriterlerini kullanarak siparişleri görüntüleyin</p>
+    <p>Tüm siparişleri görüntüle ve yönet</p>
   </div>
 
   <div class="search-container">
     <div class="search-box">
-      <!-- Sipariş ID Arama -->
       <div class="input-group">
-        <i class="fas fa-hashtag"></i>
+        <i class="fas fa-search"></i>
         <input
           type="text"
           [(ngModel)]="searchOrderId"
-          placeholder="Sipariş numarası ile ara..."
-          (keyup.enter)="searchOrders()"
+          (ngModelChange)="onSearchChange()"
+          placeholder="Sipariş No veya ID ara..."
         />
-        <button class="search-btn small" (click)="searchOrders()">
-          <i class="fas fa-search"></i>
-        </button>
       </div>
 
-      <!-- Tarih Aralığı -->
+      <div class="input-group">
+        <i class="fas fa-user"></i>
+        <input
+          type="text"
+          [(ngModel)]="searchCustomer"
+          (ngModelChange)="onSearchChange()"
+          placeholder="Müşteri ara..."
+        />
+      </div>
+
       <div class="input-group">
         <i class="fas fa-calendar"></i>
-        <input type="date" [(ngModel)]="startDate" (change)="searchOrders()" />
-        <span class="date-separator">-</span>
-        <input type="date" [(ngModel)]="endDate" (change)="searchOrders()" />
+        <input
+          type="date"
+          [(ngModel)]="searchDate"
+          (ngModelChange)="onSearchChange()"
+        />
       </div>
-
-      <!-- Durum Filtresi -->
-      <div class="input-group">
-        <i class="fas fa-filter"></i>
-        <select [(ngModel)]="selectedStatus" (change)="searchOrders()">
-          <option value="">Tüm Durumlar</option>
-          <option value="Beklemede">Beklemede</option>
-          <option value="Hazırlanıyor">Hazırlanıyor</option>
-          <option value="Yolda">Yolda</option>
-          <option value="Tamamlandı">Tamamlandı</option>
-        </select>
-      </div>
-
-      <button class="search-btn" (click)="searchOrders()">
-        <i class="fas fa-search"></i>
-        Tümünü Ara
-      </button>
-
-      <button class="reset-btn" (click)="resetFilters()">
-        <i class="fas fa-undo"></i>
-        Filtreleri Sıfırla
-      </button>
-    </div>
-
-    <!-- Hata mesajı -->
-    <div class="search-error" *ngIf="searchError">
-      <i class="fas fa-exclamation-circle"></i>
-      {{ searchError }}
     </div>
   </div>
 
-  <!-- Sonuçlar -->
-  <div class="orders-table" *ngIf="filteredOrders.length > 0">
-    <div class="table-header">
-      <h3>Bulunan Siparişler ({{ filteredOrders.length }})</h3>
-      <button class="sort-btn" (click)="toggleSortDirection()">
-        <i
-          class="fas"
-          [ngClass]="
-            sortDirection === 'desc'
-              ? 'fa-sort-amount-down'
-              : 'fa-sort-amount-up'
-          "
-        ></i>
-        {{ sortDirection === "desc" ? "En Yeni Önce" : "En Eski Önce" }}
-      </button>
-    </div>
-
+  <div class="orders-table">
     <table>
       <thead>
         <tr>
           <th>Sipariş No</th>
-          <th>Kullanıcı</th>
+          <th>Müşteri</th>
           <th>Restoran</th>
           <th>Tutar</th>
           <th>Tarih</th>
-          <th>Durum</th>
-          <th>İşlemler</th>
+          <th>İşlem</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let order of filteredOrders">
-          <td>{{ order.id }}</td>
-          <td>{{ order.userName }}</td>
-          <td>{{ order.restaurantName }}</td>
-          <td>{{ order.totalAmount }} ₺</td>
-          <td>{{ order.orderDate | date : "dd/MM/yyyy HH:mm" }}</td>
-          <td>
-            <span
-              class="status-badge"
-              [class]="'status-' + order.status.toLowerCase()"
-            >
-              {{ order.status }}
-            </span>
+          <td class="order-number">
+            <span class="number">#{{ order.orderNumber }}</span>
           </td>
-          <td>
-            <button class="view-btn" (click)="viewOrderDetails(order)">
-              <i class="fas fa-eye"></i>
+          <td class="customer-info">
+            <span class="name">{{ order.userName }}</span>
+          </td>
+          <td class="restaurant-info">
+            <span class="name">{{ order.restaurantName }}</span>
+          </td>
+          <td class="amount">₺{{ order.totalAmount }}</td>
+          <td class="date">
+            {{ order.orderDate | date : "dd/MM/yyyy HH:mm" }}
+          </td>
+          <td class="actions">
+            <button
+              class="delete-btn"
+              (click)="deleteOrder(order)"
+              title="Siparişi Sil"
+            >
+              <i class="fas fa-trash"></i>
             </button>
           </td>
         </tr>
       </tbody>
     </table>
-  </div>
-
-  <!-- Arama yapılmış ama sonuç bulunamadı mesajı -->
-  <div
-    class="no-results"
-    *ngIf="searchPerformed && filteredOrders.length === 0"
-  >
-    <i class="fas fa-search"></i>
-    <p>Arama kriterlerine uygun sipariş bulunamadı.</p>
-  </div>
-
-  <!-- Henüz arama yapılmamış mesajı -->
-  <div class="no-search" *ngIf="!searchPerformed">
-    <i class="fas fa-info-circle"></i>
-    <p>Siparişleri görüntülemek için lütfen arama kriterlerini kullanın.</p>
-  </div>
-
-  <!-- Sipariş Detay Modalı -->
-  <div class="modal" *ngIf="selectedOrder" [class.show]="selectedOrder">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Sipariş Detayları</h3>
-        <button class="close-btn" (click)="closeModal()">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-
-      <div class="modal-body">
-        <div class="order-info">
-          <div class="info-group">
-            <label>Sipariş No:</label>
-            <span>#{{ selectedOrder.id }}</span>
-          </div>
-          <div class="info-group">
-            <label>Müşteri:</label>
-            <span>{{ selectedOrder.userName }}</span>
-          </div>
-          <div class="info-group">
-            <label>Restoran:</label>
-            <span>{{ selectedOrder.restaurantName }}</span>
-          </div>
-          <div class="info-group">
-            <label>Tarih:</label>
-            <span>{{
-              selectedOrder.orderDate | date : "dd/MM/yyyy HH:mm"
-            }}</span>
-          </div>
-          <div class="info-group">
-            <label>Durum:</label>
-            <span [class]="'status-' + selectedOrder.status.toLowerCase()">
-              {{ selectedOrder.status }}
-            </span>
-          </div>
-        </div>
-
-        <div class="order-items">
-          <h4>Sipariş İçeriği</h4>
-          <div class="items-list">
-            <div class="item" *ngFor="let item of selectedOrder.items">
-              <span class="item-name">{{ item.name }}</span>
-              <span class="item-quantity">x{{ item.quantity || 0 }}</span>
-              <span class="item-price"
-                >₺{{ item.price * (item.quantity || 0) }}</span
-              >
-            </div>
-          </div>
-          <div class="total-amount">
-            <label>Toplam Tutar:</label>
-            <span>{{ selectedOrder.totalAmount }} ₺</span>
-          </div>
-        </div>
-
-        <div class="modal-actions">
-          <button class="cancel-order-btn" (click)="cancelOrder(selectedOrder)">
-            <i class="fas fa-trash"></i>
-            Siparişi İptal Et
-          </button>
-        </div>
-      </div>
-    </div>
   </div>
 </div>
